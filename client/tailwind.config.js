@@ -1,0 +1,82 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,jsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50:  '#f0f9f4',
+          100: '#dcf2e4',
+          200: '#bbe5cc',
+          300: '#8dd1ab',
+          400: '#57b583',
+          500: '#339966',
+          600: '#237a4f',
+          700: '#1c6240',
+          800: '#174e34',
+          900: '#13402b',
+          950: '#0a2419',
+        },
+        accent: {
+          50:  '#fff8ed',
+          100: '#ffefd4',
+          200: '#ffdba8',
+          300: '#ffc070',
+          400: '#ff9a38',
+          500: '#ff7b10',
+          600: '#f05e06',
+          700: '#c74507',
+          800: '#9e370e',
+          900: '#7f2f0f',
+        },
+        neutral: {
+          50:  '#f8f9f8',
+          100: '#f0f2f0',
+          200: '#e2e6e2',
+          300: '#cdd3cd',
+          400: '#a8b3a8',
+          500: '#7d8d7d',
+          600: '#5f6f5f',
+          700: '#4a574a',
+          800: '#3a463a',
+          900: '#2d382d',
+          950: '#171e17',
+        },
+      },
+      fontFamily: {
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        body:    ['"DM Sans"', 'system-ui', 'sans-serif'],
+        mono:    ['"JetBrains Mono"', 'monospace'],
+      },
+      borderRadius: {
+        '4xl': '2rem',
+        '5xl': '2.5rem',
+      },
+      boxShadow: {
+        'soft':   '0 2px 15px -3px rgba(0,0,0,0.07), 0 10px 20px -2px rgba(0,0,0,0.04)',
+        'card':   '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)',
+        'lifted': '0 8px 30px rgba(0,0,0,0.12)',
+        'green':  '0 4px 24px rgba(51,153,102,0.25)',
+      },
+      animation: {
+        'fade-in':      'fadeIn 0.4s ease forwards',
+        'slide-up':     'slideUp 0.4s ease forwards',
+        'slide-down':   'slideDown 0.3s ease forwards',
+        'scale-in':     'scaleIn 0.2s ease forwards',
+        'spin-slow':    'spin 3s linear infinite',
+        'pulse-green':  'pulseGreen 2s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn:     { from: { opacity: '0' },                     to: { opacity: '1' } },
+        slideUp:    { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        slideDown:  { from: { opacity: '0', transform: 'translateY(-8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        scaleIn:    { from: { opacity: '0', transform: 'scale(0.95)' },      to: { opacity: '1', transform: 'scale(1)' } },
+        pulseGreen: {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(51,153,102,0.4)' },
+          '50%':      { boxShadow: '0 0 0 8px rgba(51,153,102,0)' },
+        },
+      },
+    },
+  },
+  plugins: [],
+};

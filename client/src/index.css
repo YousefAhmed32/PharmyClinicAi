@@ -1,0 +1,294 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+@layer base {
+  :root {
+    --color-primary: #339966;
+    --color-primary-dark: #237a4f;
+    --color-accent: #ff7b10;
+    --color-bg: #f8f9f8;
+    --color-surface: #ffffff;
+    --color-text: #2d382d;
+    --color-muted: #7d8d7d;
+    --color-border: #e2e6e2;
+    --radius-card: 1rem;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+  }
+
+  * {
+    @apply border-neutral-200;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900 font-body antialiased;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: #f0f2f0; }
+  ::-webkit-scrollbar-thumb  { background: #cdd3cd; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #a8b3a8; }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-body font-medium
+           rounded-xl transition-all duration-200 focus:outline-none
+           focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed select-none;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700
+           active:scale-[0.98] shadow-green px-5 py-2.5 text-sm;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-primary-700 border border-primary-200
+           hover:bg-primary-50 px-5 py-2.5 text-sm;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent-500 text-white hover:bg-accent-600
+           active:scale-[0.98] px-5 py-2.5 text-sm;
+  }
+
+  .btn-ghost {
+    @apply btn text-neutral-600 hover:bg-neutral-100
+           hover:text-neutral-900 px-4 py-2 text-sm;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-500 text-white hover:bg-red-600
+           active:scale-[0.98] px-5 py-2.5 text-sm;
+  }
+
+  .btn-sm {
+    @apply px-3.5 py-1.5 text-xs rounded-lg;
+  }
+
+  .btn-lg {
+    @apply px-7 py-3.5 text-base rounded-2xl;
+  }
+
+  .btn-icon {
+    @apply btn p-2 rounded-xl hover:bg-neutral-100;
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 hover:shadow-lifted hover:-translate-y-0.5;
+  }
+
+  /* ── Inputs ── */
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl border border-neutral-200 bg-white
+           text-neutral-900 text-sm font-body
+           placeholder:text-neutral-400
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           disabled:bg-neutral-50 disabled:cursor-not-allowed
+           transition-shadow duration-150;
+  }
+
+  .input-error {
+    @apply border-red-300 focus:ring-red-400;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-neutral-700 mb-1.5;
+  }
+
+  .error-text {
+    @apply text-xs text-red-500 mt-1;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-green  { @apply badge bg-primary-100 text-primary-800; }
+  .badge-yellow { @apply badge bg-yellow-100 text-yellow-800; }
+  .badge-red    { @apply badge bg-red-100    text-red-800; }
+  .badge-blue   { @apply badge bg-blue-100   text-blue-800; }
+  .badge-gray   { @apply badge bg-neutral-100 text-neutral-700; }
+  .badge-orange { @apply badge bg-accent-100 text-accent-800; }
+
+  /* ── Page layout ── */
+  .page-wrapper {
+    @apply min-h-screen bg-neutral-50;
+  }
+
+  .container-app {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section {
+    @apply py-16 lg:py-24;
+  }
+
+  /* ── Section headings ── */
+  .section-title {
+    @apply font-display text-3xl lg:text-4xl font-semibold text-neutral-900 leading-tight;
+  }
+
+  .section-subtitle {
+    @apply text-neutral-500 font-body text-base lg:text-lg leading-relaxed mt-3;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    @apply border-t border-neutral-200;
+  }
+
+  /* ── Table ── */
+  .table-wrapper {
+    @apply overflow-x-auto rounded-2xl border border-neutral-200;
+  }
+
+  .table {
+    @apply w-full text-sm text-left;
+  }
+
+  .table thead {
+    @apply bg-neutral-50 border-b border-neutral-200;
+  }
+
+  .table th {
+    @apply px-4 py-3 font-medium text-neutral-600 whitespace-nowrap;
+  }
+
+  .table td {
+    @apply px-4 py-3.5 border-b border-neutral-100 text-neutral-700;
+  }
+
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .table tbody tr {
+    @apply hover:bg-neutral-50 transition-colors;
+  }
+
+  /* ── Loading skeleton ── */
+  .skeleton {
+    @apply bg-neutral-200 animate-pulse rounded-lg;
+  }
+
+  /* ── Overlay ── */
+  .overlay {
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm z-40;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, #339966 0%, #237a4f 100%);
+  }
+
+  .gradient-hero {
+    background: linear-gradient(160deg, #f0f9f4 0%, #dcf2e4 40%, #f8f9f8 100%);
+  }
+}
+
+/* ── RTL / LTR Full Support ──────────────────────────────────────── */
+
+/* Flip helpers */
+[dir="rtl"] .rtl-flip   { transform: scaleX(-1); }
+[dir="rtl"] .icon-dir   { transform: rotate(180deg); }
+
+/* Logical margin */
+[dir="rtl"] .ms-auto    { margin-right: auto; margin-left: 0; }
+[dir="ltr"] .ms-auto    { margin-left: auto;  margin-right: 0; }
+[dir="rtl"] .me-auto    { margin-left: auto;  margin-right: 0; }
+[dir="ltr"] .me-auto    { margin-right: auto; margin-left: 0; }
+
+/* Logical padding — ps (padding-start), pe (padding-end) */
+[dir="rtl"] .ps-3  { padding-right: 0.75rem;  padding-left: 0; }
+[dir="ltr"] .ps-3  { padding-left:  0.75rem;  padding-right: 0; }
+[dir="rtl"] .ps-9  { padding-right: 2.25rem;  padding-left: 0.75rem; }
+[dir="ltr"] .ps-9  { padding-left:  2.25rem;  padding-right: 0.75rem; }
+[dir="rtl"] .pe-3  { padding-left:  0.75rem;  padding-right: 0; }
+[dir="ltr"] .pe-3  { padding-right: 0.75rem;  padding-left: 0; }
+
+/* Text alignment */
+[dir="rtl"] .text-start { text-align: right; }
+[dir="ltr"] .text-start { text-align: left; }
+[dir="rtl"] .text-end   { text-align: left; }
+[dir="ltr"] .text-end   { text-align: right; }
+
+/* Logical borders */
+[dir="rtl"] .border-s-4 { border-right-width: 4px; border-left-width: 0; }
+[dir="ltr"] .border-s-4 { border-left-width:  4px; border-right-width: 0; }
+[dir="rtl"] .border-e   { border-left-width:  1px; border-right-width: 0; }
+[dir="ltr"] .border-e   { border-right-width: 1px; border-left-width: 0; }
+
+/* Logical start/end positioning */
+[dir="rtl"] .start-0 { right: 0; left: auto; }
+[dir="ltr"] .start-0 { left: 0;  right: auto; }
+[dir="rtl"] .end-0   { left: 0;  right: auto; }
+[dir="ltr"] .end-0   { right: 0; left: auto; }
+[dir="rtl"] .start-3 { right: 0.75rem; left: auto; }
+[dir="ltr"] .start-3 { left:  0.75rem; right: auto; }
+[dir="rtl"] .end-3   { left:  0.75rem; right: auto; }
+[dir="ltr"] .end-3   { right: 0.75rem; left: auto; }
+
+/* Arabic typography */
+[dir="rtl"] body,
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select,
+[dir="rtl"] button {
+  font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+/* RTL table cells alignment */
+[dir="rtl"] th,
+[dir="rtl"] td { text-align: right; }
+
+/* Dropdown position fix for RTL */
+[dir="rtl"] .dropdown-end { left: 0; right: auto; }
+[dir="ltr"] .dropdown-end { right: 0; left: auto; }
+
+/* Sidebar logical border */
+[dir="rtl"] .sidebar { border-left: 1px solid; border-right: none; }
+[dir="ltr"] .sidebar { border-right: 1px solid; border-left: none; }
+
+/* Smooth direction transitions */
+html { transition: direction 0ms; }
+
+/* Number formatting — keep LTR for numbers/prices in RTL mode */
+[dir="rtl"] .ltr-text { direction: ltr; display: inline-block; }
+[dir="rtl"] .font-mono { direction: ltr; }
+[dir="rtl"] .font-display { direction: inherit; }
