@@ -481,7 +481,7 @@ export default function AdminReturnsPage() {
     keepPreviousData: true,
   });
 
-  const returns   = data?.data || [];
+  const returns = data?.data?.data || [];
   const meta      = data?.meta || {};
   const stats     = statsData;
 
