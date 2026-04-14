@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { useDebounce } from '@/hooks/useCommon';
 import { BlogGridSkeleton } from '@/components/ui/Skeletons';
 import { SearchInput, Pagination, EmptyState } from '@/components/ui/UIComponents';
+const URL_IMAGE = import.meta.env.VITE_URL_IMAGE;
 
 const CATS = [
   { value:'',             label:'All Articles' },
@@ -96,7 +97,7 @@ export default function BlogPage() {
                 <Link key={article._id} to={`/blog/${article.slug}`} className="card-hover group flex flex-col">
                   <div className="aspect-video bg-neutral-100 overflow-hidden">
                     {article.image
-                      ? <img src={article.image} alt={article.title} loading="lazy"
+                      ? <img src={`${URL_IMAGE}/api/images/${article.image}`} alt={article.title} loading="lazy"
                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
                       : <div className="w-full h-full flex items-center justify-center text-4xl bg-primary-50">📰</div>
                     }
