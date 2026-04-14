@@ -546,29 +546,6 @@
       "completed": "مكتمل"
     }
   },
-  "prescription": {
-    "title": "رفع الوصفة الطبية",
-    "desc": "ارفع وصفة طبيبك وسيقوم صيدلانينا بتجهيز طلبك.",
-    "upload": "رفع الصورة",
-    "notes": "ملاحظات إضافية",
-    "submit": "إرسال الوصفة",
-    "submitted": "تم إرسال الوصفة بنجاح",
-    "myPrescriptions": "وصفاتي الطبية",
-    "noPrescriptions": "لا توجد وصفات مرفوعة"
-  },
-  "drugCheck": {
-    "title": "فاحص تفاعل الأدوية",
-    "desc": "تحقق من التفاعلات الخطرة بين الأدوية",
-    "addDrug": "إضافة دواء",
-    "checkInteractions": "فحص التفاعلات",
-    "noInteractions": "لا توجد تفاعلات معروفة",
-    "results": "نتائج التفاعل",
-    "severity": {
-      "high": "خطر مرتفع",
-      "moderate": "متوسط",
-      "low": "خطر منخفض"
-    }
-  },
   "chat": {
     "title": "الدعم الفني",
     "aiTitle": "المساعد الذكي",
@@ -619,57 +596,83 @@
     "minStock": "الحد الأدنى"
   },
   "prescription": {
-    "loginRequired": "تسجيل الدخول مطلوب",
-    "loginRequiredDesc": "يرجى تسجيل الدخول لرفع الوصفة الطبية",
-    "loginNow": "تسجيل الدخول",
-    "uploadNew": "📤 رفع جديد",
-    "myPrescriptions": "📋 وصفاتي الطبية",
-    "dragDrop": "اسحب وأفلت وصفتك هنا",
-    "dropHere": "أفلت الوصفة هنا",
-    "browseFiles": "أو انقر للاختيار من الجهاز",
-    "supportedFormats": "الصيغ المدعومة: JPG، PNG، PDF — الحد الأقصى 10MB",
-    "notesPlaceholder": "مثال: أحتاج أرخص بديل جنيس، يرجى إرفاق تعليمات الجرعة…",
-    "howItWorks": "📋 كيف يعمل",
-    "step1": "ارفع صورة وصفتك الطبية أو ملف PDF",
-    "step2": "يراجعها صيدلانينا (عادةً خلال ساعتين)",
-    "step3": "تصلك قائمة الأدوية مع الأسعار",
-    "step4": "أكّد الطلب ونبدأ بالتجهيز",
-    "sendBtn": "📤 إرسال الوصفة",
-    "uploading": "جاري الرفع…",
-    "uploadSuccess": "تم رفع الوصفة! سيراجعها صيدلانينا قريباً 💊",
-    "uploadFailed": "فشل الرفع",
-    "noPrescriptionsYet": "لا توجد وصفات بعد",
-    "uploadFirst": "ارفع أول وصفة",
-    "yourNotes": "ملاحظاتك:",
-    "pharmacistResponse": "💊 رد الصيدلاني:",
-    "totalEstimate": "التقدير الإجمالي",
-    "viewFile": "عرض ملف الوصفة",
-    "statuses": {
-      "pending": "معلّق",
-      "reviewed": "تمت المراجعة",
-      "responded": "تم الرد",
-      "fulfilled": "مكتمل"
-    }
-  },
-  "drugCheck": {
-    "enterDrugNames": "أدخل أسماء الأدوية",
-    "genericHint": "استخدم الاسم العلمي (مثال: \"warfarin\" وليس \"Coumadin\")",
-    "addDrug": "+ إضافة دواء",
-    "checking": "جاري الفحص…",
-    "checkBtn": "🔍 فحص التفاعلات",
-    "quickExamples": "أمثلة سريعة:",
-    "noInteractionsFound": "لم يتم اكتشاف أي تفاعلات",
-    "interactionsFound": "تم العثور على {{count}} تفاعل",
-    "checkedPairs": "تم فحص {{pairs}} زوج من {{count}} أدوية",
-    "highRisk": "خطر مرتفع",
-    "moderate": "متوسط",
-    "lowRisk": "خطر منخفض",
-    "recommendation": "💡 التوصية:",
-    "mechanism": "الآلية:",
-    "disclaimer": "⚕️ إخلاء المسؤولية الطبية: هذه الأداة للأغراض المعلوماتية فقط. استشر دائماً صيدلانيك أو طبيبك قبل اتخاذ قرارات دوائية.",
-    "minDrugsError": "أدخل اسمين علميين للأدوية على الأقل",
-    "checkFailed": "فشل الفحص"
-  },
+  "title": "رفع الوصفة الطبية",
+  "desc": "ارفع وصفة طبيبك وسيقوم صيدلانينا بتجهيز طلبك",
+
+  "upload": "رفع الصورة",
+  "uploadNew": "📤 رفع جديد",
+  "sendBtn": "📤 إرسال الوصفة",
+
+  "dragDrop": "اسحب وأفلت وصفتك هنا",
+  "dropHere": "أفلت الوصفة هنا",
+  "browseFiles": "أو انقر للاختيار من الجهاز",
+  "supportedFormats": "الصيغ المدعومة: JPG، PNG، PDF — الحد الأقصى 10MB",
+
+  "notes": "ملاحظات إضافية",
+  "notesPlaceholder": "مثال: أحتاج بديل أرخص…",
+
+  "howItWorks": "📋 كيف يعمل",
+  "step1": "ارفع صورة أو PDF",
+  "step2": "يتم مراجعتها",
+  "step3": "تصلك الأسعار",
+  "step4": "تأكيد الطلب",
+
+  "uploading": "جاري الرفع…",
+  "uploadSuccess": "تم رفع الوصفة بنجاح 💊",
+  "uploadFailed": "فشل الرفع",
+
+  "loginRequired": "تسجيل الدخول مطلوب",
+  "loginRequiredDesc": "يرجى تسجيل الدخول لرفع الوصفة",
+  "loginNow": "تسجيل الدخول",
+
+  "myPrescriptions": "📋 وصفاتي",
+  "noPrescriptionsYet": "لا توجد وصفات",
+  "uploadFirst": "ارفع أول وصفة",
+
+  "yourNotes": "ملاحظاتك",
+  "pharmacistResponse": "💊 رد الصيدلي",
+  "totalEstimate": "الإجمالي المتوقع",
+  "viewFile": "عرض الملف",
+
+  "statuses": {
+    "pending": "معلّق",
+    "reviewed": "تمت المراجعة",
+    "responded": "تم الرد",
+    "fulfilled": "مكتمل"
+  }
+},
+ "drugCheck": {
+  "title": "فاحص تفاعل الأدوية",
+  "desc": "تحقق من التفاعلات الخطرة بين الأدوية",
+
+  "addDrug": "إضافة دواء",
+  "checkInteractions": "فحص التفاعلات",
+
+  "enterDrugNames": "أدخل أسماء الأدوية",
+  "genericHint": "استخدم الاسم العلمي (مثال: \"warfarin\" وليس \"Coumadin\")",
+
+  "checking": "جاري الفحص…",
+  "checkBtn": "🔍 فحص التفاعلات",
+
+  "quickExamples": "أمثلة سريعة:",
+  "noInteractions": "لا توجد تفاعلات معروفة",
+  "noInteractionsFound": "لم يتم اكتشاف أي تفاعلات",
+
+  "interactionsFound": "تم العثور على {{count}} تفاعل",
+  "checkedPairs": "تم فحص {{pairs}} زوج من {{count}} أدوية",
+
+  "highRisk": "خطر مرتفع",
+  "moderate": "متوسط",
+  "lowRisk": "خطر منخفض",
+
+  "recommendation": "💡 التوصية:",
+  "mechanism": "الآلية:",
+
+  "disclaimer": "⚕️ إخلاء المسؤولية الطبية: هذه الأداة للأغراض المعلوماتية فقط.",
+
+  "minDrugsError": "أدخل اسمين علميين للأدوية على الأقل",
+  "checkFailed": "فشل الفحص"
+},
   "analytics": {
     "title": "الإحصائيات",
     "subtitle": "رؤى معمّقة حول أداء الصيدلية",

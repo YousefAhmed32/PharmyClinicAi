@@ -546,29 +546,7 @@
       "completed": "Completed"
     }
   },
-  "prescription": {
-    "title": "Upload Prescription",
-    "desc": "Upload your doctor's prescription and our pharmacist will prepare your order.",
-    "upload": "Upload Image",
-    "notes": "Additional Notes",
-    "submit": "Submit Prescription",
-    "submitted": "Prescription submitted successfully",
-    "myPrescriptions": "My Prescriptions",
-    "noPrescriptions": "No prescriptions uploaded"
-  },
-  "drugCheck": {
-    "title": "Drug Interaction Checker",
-    "desc": "Check for dangerous interactions between medications",
-    "addDrug": "Add Drug",
-    "checkInteractions": "Check Interactions",
-    "noInteractions": "No known interactions found",
-    "results": "Interaction Results",
-    "severity": {
-      "high": "High Risk",
-      "moderate": "Moderate",
-      "low": "Low Risk"
-    }
-  },
+
   "chat": {
     "title": "Support Chat",
     "aiTitle": "AI Assistant",
@@ -619,55 +597,81 @@
     "minStock": "Min. Stock"
   },
   "prescription": {
-    "loginRequired": "Login Required",
-    "loginRequiredDesc": "Please login to upload your prescription",
-    "loginNow": "Login Now",
+    "title": "Upload Prescription",
+    "desc": "Upload your doctor's prescription and our pharmacist will prepare your order",
+
+    "upload": "Upload Image",
     "uploadNew": "📤 Upload New",
-    "myPrescriptions": "📋 My Prescriptions",
+    "sendBtn": "📤 Send Prescription",
+
     "dragDrop": "Drag & drop your prescription",
     "dropHere": "Drop your prescription here",
     "browseFiles": "or click to browse files",
     "supportedFormats": "Supported: JPG, PNG, PDF — max 10MB",
-    "notesPlaceholder": "E.g. I need the cheapest generic alternative, please include dosage instructions…",
+
+    "notes": "Additional Notes",
+    "notesPlaceholder": "E.g. I need cheaper alternative…",
+
     "howItWorks": "📋 How it works",
-    "step1": "Upload your prescription photo or PDF",
-    "step2": "Our pharmacist reviews it (usually within 2 hours)",
-    "step3": "You receive a medicine list with pricing",
-    "step4": "Confirm and we prepare your order",
-    "sendBtn": "📤 Send Prescription",
+    "step1": "Upload your file",
+    "step2": "Reviewed by pharmacist",
+    "step3": "Get pricing",
+    "step4": "Confirm order",
+
     "uploading": "Uploading…",
-    "uploadSuccess": "Prescription uploaded! Our pharmacist will review it shortly 💊",
+    "uploadSuccess": "Uploaded successfully 💊",
     "uploadFailed": "Upload failed",
+
+    "loginRequired": "Login Required",
+    "loginRequiredDesc": "Please login to upload prescription",
+    "loginNow": "Login",
+
+    "myPrescriptions": "📋 My Prescriptions",
     "noPrescriptionsYet": "No prescriptions yet",
-    "uploadFirst": "Upload First Prescription",
-    "yourNotes": "Your notes:",
-    "pharmacistResponse": "💊 Pharmacist Response:",
+    "uploadFirst": "Upload First",
+
+    "yourNotes": "Your notes",
+    "pharmacistResponse": "💊 Pharmacist Response",
     "totalEstimate": "Total Estimate",
-    "viewFile": "View prescription file",
+    "viewFile": "View File",
+
     "statuses": {
-      "pending": "pending",
-      "reviewed": "reviewed",
-      "responded": "responded",
-      "fulfilled": "fulfilled"
+      "pending": "Pending",
+      "reviewed": "Reviewed",
+      "responded": "Responded",
+      "fulfilled": "Fulfilled"
     }
   },
   "drugCheck": {
+    "title": "Drug Interaction Checker",
+    "desc": "Check for dangerous interactions between medications",
+
+    "addDrug": "Add Drug",
+    "checkInteractions": "Check Interactions",
+
     "enterDrugNames": "Enter Drug Names",
     "genericHint": "Use generic names (e.g. \"warfarin\" not \"Coumadin\")",
-    "addDrug": "+ Add Drug",
+
     "checking": "Checking…",
     "checkBtn": "🔍 Check Interactions",
+
     "quickExamples": "Quick examples:",
+    "noInteractions": "No known interactions found",
     "noInteractionsFound": "No interactions detected",
+
     "interactionsFound": "{{count}} interaction{{plural}} found",
     "checkedPairs": "Checked {{pairs}} drug pair{{plural}} from {{count}} drugs",
+
     "highRisk": "High Risk",
     "moderate": "Moderate",
     "lowRisk": "Low Risk",
+
     "recommendation": "💡 Recommendation:",
     "mechanism": "Mechanism:",
-    "disclaimer": "⚕️ Medical Disclaimer: This tool is for informational purposes only. Always consult your pharmacist or physician before making medication decisions. This database may not cover all possible interactions.",
-    "minDrugsError": "Enter at least 2 drug generic names",
+
+    "disclaimer": "⚕️ This tool is for informational purposes only. Always consult a doctor.",
+
+    "minDrugsError": "Enter at least 2 drug names",
     "checkFailed": "Check failed"
   },
   "analytics": {
