@@ -1,22 +1,30 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '@/api/axios';
 import toast from 'react-hot-toast';
 
 const SEVERITY_CONFIG = {
-  high:     { color: 'bg-red-50 border-red-200',      badge: 'bg-red-500 text-white',     icon: '🚨', label: 'HIGH RISK' },
-  moderate: { color: 'bg-yellow-50 border-yellow-200', badge: 'bg-yellow-500 text-white',  icon: '⚠️', label: 'MODERATE' },
-  low:      { color: 'bg-blue-50 border-blue-200',     badge: 'bg-blue-400 text-white',    icon: 'ℹ️', label: 'LOW RISK' },
+  high:     { color: 'bg-red-50 border-red-200',      badge: 'bg-red-500 text-white',     icon: '🚨' },
+  moderate: { color: 'bg-yellow-50 border-yellow-200', badge: 'bg-yellow-500 text-white',  icon: '⚠️' },
+  low:      { color: 'bg-blue-50 border-blue-200',     badge: 'bg-blue-400 text-white',    icon: 'ℹ️' },
 };
 
 export default function InteractionCheckerPage() {
-  const [drugs,     setDrugs]     = useState(['', '']);
-  const [result,    setResult]    = useState(null);
+  const { t } = useTranslation();
+  const [drugs,  setDrugs]  = useState(['', '']);
+  const [result, setResult] = useState(null);
+
+  const SEVERITY_LABELS = {
+    high:     t('drugCheck.highRisk'),
+    moderate: t('drugCheck.moderate'),
+    low:      t('drugCheck.lowRisk'),
+  };
 
   const check = useMutation({
     mutationFn: (drugList) => api.post('/interactions/check', { drugs: drugList }),
     onSuccess:  (res) => setResult(res.data.data),
-    onError:    (err) => toast.error(err.response?.data?.message || 'Check failed'),
+    onError:    (err) => toast.error(err.response?.data?.message || t('drugCheck.checkFailed')),
   });
 
   const addDrug    = () => { if (drugs.length < 10) setDrugs(d => [...d, '']); };
@@ -25,7 +33,7 @@ export default function InteractionCheckerPage() {
 
   const handleCheck = () => {
     const valid = drugs.map(d => d.trim()).filter(Boolean);
-    if (valid.length < 2) { toast.error('Enter at least 2 drug generic names'); return; }
+    if (valid.length < 2) { toast.error(t('drugCheck.minDrugsError')); return; }
     setResult(null);
     check.mutate(valid);
   };
@@ -37,7 +45,6 @@ export default function InteractionCheckerPage() {
   return (
     <div className="section">
       <div className="container-app max-w-3xl">
-        {/* Header */}
         <div className="text-center mb-10">
           <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5">
@@ -46,17 +53,14 @@ export default function InteractionCheckerPage() {
               <line x1="12" y1="17" x2="12.01" y2="17" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
           </div>
-          <h1 className="section-title">Drug Interaction Checker</h1>
-          <p className="section-subtitle mx-auto max-w-xl">
-            Enter generic drug names to check for known interactions. Uses generic names only — not brand names.
-          </p>
+          <h1 className="section-title">{t('drugCheck.title')}</h1>
+          <p className="section-subtitle mx-auto max-w-xl">{t('drugCheck.desc')}</p>
         </div>
 
-        {/* Input form */}
         <div className="card p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-neutral-800">Enter Drug Names</h2>
-            <span className="text-xs text-neutral-400">Use generic names (e.g. "warfarin" not "Coumadin")</span>
+            <h2 className="font-semibold text-neutral-800">{t('drugCheck.enterDrugNames')}</h2>
+            <span className="text-xs text-neutral-400">{t('drugCheck.genericHint')}</span>
           </div>
 
           <div className="space-y-3">
@@ -86,19 +90,18 @@ export default function InteractionCheckerPage() {
 
           <div className="flex gap-3 mt-4">
             <button onClick={addDrug} disabled={drugs.length >= 10} className="btn-secondary btn-sm">
-              + Add Drug
+              {t('drugCheck.addDrug')}
             </button>
             <button onClick={handleCheck} disabled={check.isPending} className="btn-primary ml-auto">
               {check.isPending
-                ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.2"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg> Checking…</>
-                : '🔍 Check Interactions'
+                ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.2"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg> {t('drugCheck.checking')}</>
+                : t('drugCheck.checkBtn')
               }
             </button>
           </div>
 
-          {/* Common examples */}
           <div className="mt-4 pt-4 border-t border-neutral-100">
-            <p className="text-xs text-neutral-400 mb-2">Quick examples:</p>
+            <p className="text-xs text-neutral-400 mb-2">{t('drugCheck.quickExamples')}</p>
             <div className="flex flex-wrap gap-2">
               {[
                 ['warfarin','aspirin'],
@@ -116,36 +119,33 @@ export default function InteractionCheckerPage() {
           </div>
         </div>
 
-        {/* Results */}
         {result && (
           <div className="space-y-4 animate-fade-in">
-            {/* Summary card */}
             <div className={`card p-5 border-2 ${result.summary.safe ? 'border-primary-200 bg-primary-50' : highCount > 0 ? 'border-red-200 bg-red-50' : 'border-yellow-200 bg-yellow-50'}`}>
               <div className="flex items-center gap-4">
-                <div className={`text-4xl`}>{result.summary.safe ? '✅' : highCount > 0 ? '🚨' : '⚠️'}</div>
+                <div className="text-4xl">{result.summary.safe ? '✅' : highCount > 0 ? '🚨' : '⚠️'}</div>
                 <div>
                   <h3 className={`font-display font-bold text-xl ${result.summary.safe ? 'text-primary-800' : highCount > 0 ? 'text-red-800' : 'text-yellow-800'}`}>
                     {result.summary.safe
-                      ? 'No interactions detected'
-                      : `${result.summary.interactions} interaction${result.summary.interactions > 1 ? 's' : ''} found`
+                      ? t('drugCheck.noInteractionsFound')
+                      : t('drugCheck.interactionsFound', { count: result.summary.interactions, plural: result.summary.interactions > 1 ? 's' : '' })
                     }
                   </h3>
                   <p className="text-sm text-neutral-600 mt-0.5">
-                    Checked {result.summary.pairs} drug pair{result.summary.pairs > 1 ? 's' : ''} from {result.summary.checked} drugs
+                    {t('drugCheck.checkedPairs', { pairs: result.summary.pairs, plural: result.summary.pairs > 1 ? 's' : '', count: result.summary.checked })}
                   </p>
                 </div>
               </div>
 
               {!result.summary.safe && (
                 <div className="flex gap-3 mt-4">
-                  {highCount     > 0 && <div className="flex items-center gap-2 px-3 py-1.5 bg-red-100 rounded-full"><span className="w-2 h-2 rounded-full bg-red-500"/><span className="text-xs font-semibold text-red-700">{highCount} High Risk</span></div>}
-                  {moderateCount > 0 && <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 rounded-full"><span className="w-2 h-2 rounded-full bg-yellow-500"/><span className="text-xs font-semibold text-yellow-700">{moderateCount} Moderate</span></div>}
-                  {lowCount      > 0 && <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 rounded-full"><span className="w-2 h-2 rounded-full bg-blue-400"/><span className="text-xs font-semibold text-blue-700">{lowCount} Low Risk</span></div>}
+                  {highCount     > 0 && <div className="flex items-center gap-2 px-3 py-1.5 bg-red-100 rounded-full"><span className="w-2 h-2 rounded-full bg-red-500"/><span className="text-xs font-semibold text-red-700">{highCount} {t('drugCheck.highRisk')}</span></div>}
+                  {moderateCount > 0 && <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 rounded-full"><span className="w-2 h-2 rounded-full bg-yellow-500"/><span className="text-xs font-semibold text-yellow-700">{moderateCount} {t('drugCheck.moderate')}</span></div>}
+                  {lowCount      > 0 && <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 rounded-full"><span className="w-2 h-2 rounded-full bg-blue-400"/><span className="text-xs font-semibold text-blue-700">{lowCount} {t('drugCheck.lowRisk')}</span></div>}
                 </div>
               )}
             </div>
 
-            {/* Interaction cards */}
             {result.interactions.map((interaction, i) => {
               const cfg = SEVERITY_CONFIG[interaction.severity];
               return (
@@ -160,21 +160,19 @@ export default function InteractionCheckerPage() {
                           {interaction.drug2}
                         </span>
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${cfg.badge}`}>
-                          {cfg.label}
+                          {SEVERITY_LABELS[interaction.severity] || interaction.severity}
                         </span>
                       </div>
-                      <p className="text-neutral-700 text-sm leading-relaxed mb-3">
-                        {interaction.description}
-                      </p>
+                      <p className="text-neutral-700 text-sm leading-relaxed mb-3">{interaction.description}</p>
                       {interaction.recommendation && (
                         <div className="p-3 bg-white/70 rounded-xl border border-white">
-                          <p className="text-xs font-semibold text-neutral-600 mb-1">💡 Recommendation:</p>
+                          <p className="text-xs font-semibold text-neutral-600 mb-1">{t('drugCheck.recommendation')}</p>
                           <p className="text-sm text-neutral-700">{interaction.recommendation}</p>
                         </div>
                       )}
                       {interaction.mechanism && (
                         <p className="text-xs text-neutral-500 mt-2">
-                          <span className="font-medium">Mechanism:</span> {interaction.mechanism}
+                          <span className="font-medium">{t('drugCheck.mechanism')}</span> {interaction.mechanism}
                         </p>
                       )}
                     </div>
@@ -183,13 +181,8 @@ export default function InteractionCheckerPage() {
               );
             })}
 
-            {/* Disclaimer */}
             <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-              <p className="text-xs text-neutral-500">
-                ⚕️ <strong>Medical Disclaimer:</strong> This tool is for informational purposes only.
-                Always consult your pharmacist or physician before making medication decisions.
-                This database may not cover all possible interactions.
-              </p>
+              <p className="text-xs text-neutral-500">{t('drugCheck.disclaimer')}</p>
             </div>
           </div>
         )}

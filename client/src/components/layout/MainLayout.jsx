@@ -263,20 +263,37 @@ function Navbar() {
             {accessToken && <NotificationBell />}
 
             {accessToken && (
-              <Link to="/cart" className="relative btn-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                  <line x1="3" y1="6" x2="21" y2="6"/>
-                  <path d="M16 10a4 4 0 01-8 0"/>
-                </svg>
-                {totalItems() > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-primary-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
-                    {totalItems() > 9 ? '9+' : totalItems()}
-                  </span>
-                )}
-              </Link>
-            )}
+  <Link to="/cart" className="relative btn-icon">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 01-8 0" />
+    </svg>
 
+    {totalItems() > 0 && (
+    <span
+    className="
+      absolute -top-1.5 -right-1.5
+      min-w-[16px] h-4 px-[4px]
+      bg-primary-600 text-white
+      text-[9px] font-bold
+      rounded-full
+      flex items-center justify-center
+      leading-none
+    "
+  >
+    {totalItems() > 9 ? '9+' : totalItems()}
+  </span>
+    )}
+  </Link>
+)}
             {user ? (
               <div className="relative group">
                 <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-neutral-100 transition-colors">

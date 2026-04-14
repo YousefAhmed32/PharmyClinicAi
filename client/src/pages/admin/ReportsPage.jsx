@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { analyticsAPI } from '@/api/analyticsAPI';
-import { ordersAPI, productsAPI, authAPI, appointmentsAPI } from '@/api/services';
 import {
   exportToExcel,
   ORDERS_COLUMNS, PRODUCTS_COLUMNS, USERS_COLUMNS,
@@ -10,17 +10,17 @@ import {
 } from '@/utils/excelExport';
 import { format, subDays, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
 import toast from 'react-hot-toast';
+
 const URL_IMAGE = import.meta.env.VITE_URL_IMAGE;
 
-
-// ── Preset date ranges ─────────────────────────────────────────────────────
-const PRESETS = [
-  { label: 'Today',        from: format(new Date(), 'yyyy-MM-dd'),               to: format(new Date(), 'yyyy-MM-dd') },
-  { label: 'Last 7 Days',  from: format(subDays(new Date(), 6), 'yyyy-MM-dd'),   to: format(new Date(), 'yyyy-MM-dd') },
-  { label: 'Last 30 Days', from: format(subDays(new Date(), 29), 'yyyy-MM-dd'),  to: format(new Date(), 'yyyy-MM-dd') },
-  { label: 'This Month',   from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(endOfMonth(new Date()), 'yyyy-MM-dd') },
-  { label: 'This Year',    from: format(startOfYear(new Date()), 'yyyy-MM-dd'),  to: format(new Date(), 'yyyy-MM-dd') },
-  { label: 'All Time',     from: '2020-01-01',                                   to: format(new Date(), 'yyyy-MM-dd') },
+// Presets use label keys — translated in the component
+const PRESET_DEFS = [
+  { key: 'today',     from: () => format(new Date(), 'yyyy-MM-dd'),               to: () => format(new Date(), 'yyyy-MM-dd') },
+  { key: 'last7',     from: () => format(subDays(new Date(), 6), 'yyyy-MM-dd'),   to: () => format(new Date(), 'yyyy-MM-dd') },
+  { key: 'last30',    from: () => format(subDays(new Date(), 29), 'yyyy-MM-dd'),  to: () => format(new Date(), 'yyyy-MM-dd') },
+  { key: 'thisMonth', from: () => format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: () => format(endOfMonth(new Date()), 'yyyy-MM-dd') },
+  { key: 'thisYear',  from: () => format(startOfYear(new Date()), 'yyyy-MM-dd'),  to: () => format(new Date(), 'yyyy-MM-dd') },
+  { key: 'allTime',   from: () => '2020-01-01',                                   to: () => format(new Date(), 'yyyy-MM-dd') },
 ];
 
 // ── KPI Card ──────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ function KpiCard({ title, value, sub, icon, color, trend, trendLabel }) {
 }
 
 // ── Mini table ────────────────────────────────────────────────────────────
-function MiniTable({ title, columns, rows, emptyMsg = 'No data' }) {
+function MiniTable({ title, columns, rows, emptyMsg }) {
   return (
     <div className="card">
       <div className="px-5 py-4 border-b border-neutral-100">
@@ -77,15 +77,18 @@ function MiniTable({ title, columns, rows, emptyMsg = 'No data' }) {
 }
 
 // ── Export Button ─────────────────────────────────────────────────────────
-function ExportBtn({ label, onClick, loading, icon = '📥' }) {
+function ExportBtn({ label, onClick, loading }) {
   return (
     <button onClick={onClick} disabled={loading}
       className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-neutral-200 bg-white
                  hover:border-primary-400 hover:bg-primary-50 text-sm font-medium text-neutral-700
                  hover:text-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
       {loading
-        ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>
-        : <span>{icon}</span>
+        ? <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25"/>
+            <path d="M12 2a10 10 0 0110 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+          </svg>
+        : <span>📥</span>
       }
       {label}
     </button>
@@ -93,22 +96,31 @@ function ExportBtn({ label, onClick, loading, icon = '📥' }) {
 }
 
 export default function ReportsPage() {
-  const [dateRange,   setDateRange]  = useState({ from: PRESETS[2].from, to: PRESETS[2].to });
-  const [activePreset,setActivePreset] = useState('Last 30 Days');
-  const [exporting,  setExporting]   = useState({});
+  const { t } = useTranslation();
+
+  const PRESETS = PRESET_DEFS.map(p => ({
+    key: p.key,
+    label: t(`reports.presets.${p.key}`),
+    from: p.from(),
+    to: p.to(),
+  }));
+
+  const [dateRange,    setDateRange]   = useState({ from: PRESETS[2].from, to: PRESETS[2].to });
+  const [activePreset, setActivePreset] = useState(PRESETS[2].key);
+  const [exporting,    setExporting]   = useState({});
 
   const applyPreset = (preset) => {
-    setActivePreset(preset.label);
+    setActivePreset(preset.key);
     setDateRange({ from: preset.from, to: preset.to });
   };
 
   const days = Math.max(1, Math.round((new Date(dateRange.to) - new Date(dateRange.from)) / 86400000) + 1);
 
   // ── Queries ─────────────────────────────────────────────────────────────
-  const { data: overview }    = useQuery({ queryKey: ['rep-overview'],         queryFn: () => analyticsAPI.getOverview().then(r => r.data.data) });
-  const { data: revData }     = useQuery({ queryKey: ['rep-revenue', days],    queryFn: () => analyticsAPI.getRevenue({ days }).then(r => r.data.data) });
-  const { data: topProducts } = useQuery({ queryKey: ['rep-top', dateRange],   queryFn: () => analyticsAPI.getTopProducts({ limit: 10 }).then(r => r.data.data) });
-  const { data: catData }     = useQuery({ queryKey: ['rep-cats'],             queryFn: () => analyticsAPI.getCategories().then(r => r.data.data) });
+  const { data: overview }    = useQuery({ queryKey: ['rep-overview'],        queryFn: () => analyticsAPI.getOverview().then(r => r.data.data) });
+  const { data: revData }     = useQuery({ queryKey: ['rep-revenue', days],   queryFn: () => analyticsAPI.getRevenue({ days }).then(r => r.data.data) });
+  const { data: topProducts } = useQuery({ queryKey: ['rep-top', dateRange],  queryFn: () => analyticsAPI.getTopProducts({ limit: 10 }).then(r => r.data.data) });
+  const { data: catData }     = useQuery({ queryKey: ['rep-cats'],            queryFn: () => analyticsAPI.getCategories().then(r => r.data.data) });
 
   // ── Computed metrics ─────────────────────────────────────────────────────
   const totalRevenue  = revData?.reduce((s, d) => s + d.revenue, 0) || 0;
@@ -116,17 +128,14 @@ export default function ReportsPage() {
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   const avgDailyRev   = totalRevenue / days;
 
-  const prevHalf  = revData?.slice(0, Math.floor(revData.length / 2)) || [];
-  const currHalf  = revData?.slice(Math.floor(revData.length / 2))    || [];
-  const prevRev   = prevHalf.reduce((s, d) => s + d.revenue, 0);
-  const currRev   = currHalf.reduce((s, d) => s + d.revenue, 0);
+  const prevHalf      = revData?.slice(0, Math.floor(revData.length / 2)) || [];
+  const currHalf      = revData?.slice(Math.floor(revData.length / 2))    || [];
+  const prevRev       = prevHalf.reduce((s, d) => s + d.revenue, 0);
+  const currRev       = currHalf.reduce((s, d) => s + d.revenue, 0);
   const revenueGrowth = prevRev > 0 ? (((currRev - prevRev) / prevRev) * 100).toFixed(1) : null;
 
-  const bestDay   = revData?.reduce((best, d) => d.revenue > (best?.revenue || 0) ? d : best, null);
-  const worstDay  = revData?.reduce((worst, d) => d.revenue < (worst?.revenue ?? Infinity) ? d : worst, null);
-
-  // Status breakdown from overview
-  const ordersByStatus = overview?.orders || {};
+  const bestDay  = revData?.reduce((best, d)  => d.revenue > (best?.revenue || 0)          ? d : best,  null);
+  const worstDay = revData?.reduce((worst, d) => d.revenue < (worst?.revenue ?? Infinity)  ? d : worst, null);
 
   // ── Export handlers ──────────────────────────────────────────────────────
   const handleExport = async (type) => {
@@ -136,57 +145,23 @@ export default function ReportsPage() {
       const raw = res.data.data || [];
 
       const sheetMap = {
-        orders: {
-          name: 'Orders',
-          cols: ORDERS_COLUMNS,
-          data: raw.map(o => ({
-            ...o,
-            createdAt: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '—',
-          })),
-        },
-        products: {
-          name: 'Products',
-          cols: PRODUCTS_COLUMNS,
-          data: raw.map(p => ({
-            ...p,
-            createdAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '—',
-          })),
-        },
-        users: {
-          name: 'Users',
-          cols: USERS_COLUMNS,
-          data: raw.map(u => ({
-            ...u,
-            createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—',
-            lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-GB') : 'Never',
-          })),
-        },
-        inventory: {
-          name: 'Inventory',
-          cols: INVENTORY_COLUMNS,
-          data: prepareInventoryData(raw),
-        },
-        appointments: {
-          name: 'Appointments',
-          cols: APPOINTMENTS_COLUMNS,
-          data: raw.map(a => ({
-            ...a,
-            createdAt: a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-GB') : '—',
-          })),
-        },
+        orders:       { name: t('reports.sheets.orders'),       cols: ORDERS_COLUMNS,       data: raw.map(o => ({ ...o, createdAt: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '—' })) },
+        products:     { name: t('reports.sheets.products'),     cols: PRODUCTS_COLUMNS,     data: raw.map(p => ({ ...p, createdAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '—' })) },
+        users:        { name: t('reports.sheets.users'),        cols: USERS_COLUMNS,        data: raw.map(u => ({ ...u, createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—', lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-GB') : t('reports.never') })) },
+        inventory:    { name: t('reports.sheets.inventory'),    cols: INVENTORY_COLUMNS,    data: prepareInventoryData(raw) },
+        appointments: { name: t('reports.sheets.appointments'), cols: APPOINTMENTS_COLUMNS, data: raw.map(a => ({ ...a, createdAt: a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-GB') : '—' })) },
       };
 
       const sheet = sheetMap[type];
       exportToExcel([{ name: sheet.name, columns: sheet.cols, data: sheet.data }], `pharmyclinic_${type}`);
-      toast.success(`${sheet.name} exported to Excel ✓`);
+      toast.success(t('reports.exportSuccess', { name: sheet.name }));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Export failed');
+      toast.error(err.response?.data?.message || t('reports.exportFailed'));
     } finally {
       setExporting(e => ({ ...e, [type]: false }));
     }
   };
 
-  // Full report: multiple sheets in one workbook
   const handleFullReport = async () => {
     setExporting(e => ({ ...e, full: true }));
     try {
@@ -197,89 +172,70 @@ export default function ReportsPage() {
         analyticsAPI.exportExcel('appointments', { from: dateRange.from, to: dateRange.to }),
       ]);
 
-      // Revenue summary sheet
       const revSummary = revData || [];
 
       exportToExcel([
         {
-          name: 'Revenue Summary',
-          columns: [
-            ...REVENUE_COLUMNS,
-            { header: 'Avg Order (EGP)', key: '_avg', width: 16 },
-          ],
-          data: revSummary.map(d => ({
-            ...d,
-            _avg: d.orders > 0 ? (d.revenue / d.orders).toFixed(2) : 0,
-          })),
+          name: t('reports.sheets.revenueSummary'),
+          columns: [...REVENUE_COLUMNS, { header: t('reports.avgOrderCol'), key: '_avg', width: 16 }],
+          data: revSummary.map(d => ({ ...d, _avg: d.orders > 0 ? (d.revenue / d.orders).toFixed(2) : 0 })),
         },
         {
-          name: 'Orders',
+          name: t('reports.sheets.orders'),
           columns: ORDERS_COLUMNS,
-          data: (ordersRes.data.data || []).map(o => ({
-            ...o,
-            createdAt: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '—',
-          })),
+          data: (ordersRes.data.data || []).map(o => ({ ...o, createdAt: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '—' })),
         },
         {
-          name: 'Products',
+          name: t('reports.sheets.products'),
           columns: PRODUCTS_COLUMNS,
-          data: (productsRes.data.data || []).map(p => ({
-            ...p,
-            createdAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '—',
-          })),
+          data: (productsRes.data.data || []).map(p => ({ ...p, createdAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB') : '—' })),
         },
         {
-          name: 'Patients',
+          name: t('reports.sheets.patients'),
           columns: USERS_COLUMNS,
-          data: (usersRes.data.data || []).map(u => ({
-            ...u,
-            createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—',
-            lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-GB') : 'Never',
-          })),
+          data: (usersRes.data.data || []).map(u => ({ ...u, createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—', lastLogin: u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-GB') : t('reports.never') })),
         },
         {
-          name: 'Appointments',
+          name: t('reports.sheets.appointments'),
           columns: APPOINTMENTS_COLUMNS,
-          data: (apptRes.data.data || []).map(a => ({
-            ...a,
-            createdAt: a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-GB') : '—',
-          })),
+          data: (apptRes.data.data || []).map(a => ({ ...a, createdAt: a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-GB') : '—' })),
         },
         {
-          name: 'Category Breakdown',
+          name: t('reports.sheets.categoryBreakdown'),
           columns: [
-            { header: 'Category',    key: 'category', width: 20 },
-            { header: 'Products',    key: 'products', width: 12 },
-            { header: 'Total Stock', key: 'totalStock', width: 14 },
-            { header: 'Avg Price (EGP)', key: 'avgPrice', width: 16 },
-            { header: 'Units Sold',  key: 'sold',     width: 12 },
-            { header: 'Revenue (EGP)', key: 'revenue', width: 16 },
+            { header: t('reports.catCols.category'),    key: 'category',   width: 20 },
+            { header: t('reports.catCols.products'),    key: 'products',   width: 12 },
+            { header: t('reports.catCols.totalStock'),  key: 'totalStock', width: 14 },
+            { header: t('reports.catCols.avgPrice'),    key: 'avgPrice',   width: 16 },
+            { header: t('reports.catCols.unitsSold'),   key: 'sold',       width: 12 },
+            { header: t('reports.catCols.revenue'),     key: 'revenue',    width: 16 },
           ],
           data: catData || [],
         },
       ], 'pharmyclinic_full_report');
 
-      toast.success('Full report exported ✓');
-    } catch (err) {
-      toast.error('Full report export failed');
+      toast.success(t('reports.fullExportSuccess'));
+    } catch {
+      toast.error(t('reports.fullExportFailed'));
     } finally {
       setExporting(e => ({ ...e, full: false }));
     }
   };
+
+  const activePresetLabel = PRESETS.find(p => p.key === activePreset)?.label || t('reports.presets.custom');
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-neutral-900">Reports</h1>
-          <p className="text-neutral-500 text-sm mt-1">Revenue analysis, growth metrics & data exports</p>
+          <h1 className="font-display text-2xl font-bold text-neutral-900">{t('admin.reports')}</h1>
+          <p className="text-neutral-500 text-sm mt-1">{t('reports.subtitle')}</p>
         </div>
-        <button onClick={handleFullReport} disabled={exporting.full}
-          className="btn-primary">
+        <button onClick={handleFullReport} disabled={exporting.full} className="btn-primary">
           {exporting.full
-            ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg> Generating…</>
-            : <> 📊 Export Full Report (Excel)</>
+            ? <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0110 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg> {t('reports.generating')}</>
+            : <> 📊 {t('reports.exportFullBtn')}</>
           }
         </button>
       </div>
@@ -287,13 +243,12 @@ export default function ReportsPage() {
       {/* Date range selector */}
       <div className="card p-4">
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm font-medium text-neutral-700 shrink-0">📅 Period:</p>
-          {/* Preset buttons */}
+          <p className="text-sm font-medium text-neutral-700 shrink-0">📅 {t('reports.period')}:</p>
           <div className="flex flex-wrap gap-1.5">
             {PRESETS.map(p => (
-              <button key={p.label} onClick={() => applyPreset(p)}
+              <button key={p.key} onClick={() => applyPreset(p)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  activePreset === p.label
+                  activePreset === p.key
                     ? 'bg-primary-600 text-white shadow-green'
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}>
@@ -301,69 +256,64 @@ export default function ReportsPage() {
               </button>
             ))}
           </div>
-          {/* Custom range */}
           <div className="flex items-center gap-2 ml-auto">
-            <label className="text-xs text-neutral-500">From:</label>
-            <input type="date" className="input text-sm w-36"
-              value={dateRange.from}
-              onChange={e => { setActivePreset('Custom'); setDateRange(r => ({ ...r, from: e.target.value })); }}
-            />
-            <label className="text-xs text-neutral-500">To:</label>
-            <input type="date" className="input text-sm w-36"
-              value={dateRange.to}
-              onChange={e => { setActivePreset('Custom'); setDateRange(r => ({ ...r, to: e.target.value })); }}
-            />
+            <label className="text-xs text-neutral-500">{t('reports.from')}:</label>
+            <input type="date" className="input text-sm w-36" value={dateRange.from}
+              onChange={e => { setActivePreset('custom'); setDateRange(r => ({ ...r, from: e.target.value })); }}/>
+            <label className="text-xs text-neutral-500">{t('reports.to')}:</label>
+            <input type="date" className="input text-sm w-36" value={dateRange.to}
+              onChange={e => { setActivePreset('custom'); setDateRange(r => ({ ...r, to: e.target.value })); }}/>
           </div>
         </div>
         <p className="text-xs text-neutral-400 mt-2">
-          Showing data for <strong className="text-neutral-600">{days} day{days !== 1 ? 's' : ''}</strong>
-          : {dateRange.from} → {dateRange.to}
+          {t('reports.showingDays', { days, from: dateRange.from, to: dateRange.to })}
         </p>
       </div>
 
       {/* KPI Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          title="Total Revenue"
-          value={`${totalRevenue.toLocaleString('en-EG')} EGP`}
-          sub={`Avg ${avgDailyRev.toFixed(0)} EGP/day`}
+          title={t('analytics.totalRevenue')}
+          value={`${totalRevenue.toLocaleString('en-EG')} ${t('common.currency')}`}
+          sub={t('reports.avgPerDay', { avg: avgDailyRev.toFixed(0), currency: t('common.currency') })}
           icon="💰" color="border-primary-500"
           trend={revenueGrowth}
-          trendLabel={revenueGrowth ? `vs prev ${Math.floor(days/2)}d` : null}
+          trendLabel={revenueGrowth ? t('reports.vsPrev', { days: Math.floor(days/2) }) : null}
         />
         <KpiCard
-          title="Total Orders"
+          title={t('analytics.totalOrders')}
           value={totalOrders.toLocaleString()}
-          sub={`${(totalOrders / days).toFixed(1)} orders/day avg`}
+          sub={t('reports.ordersPerDay', { avg: (totalOrders / days).toFixed(1) })}
           icon="📦" color="border-blue-500"
         />
         <KpiCard
-          title="Avg Order Value"
-          value={`${avgOrderValue.toFixed(2)} EGP`}
-          sub={`From ${totalOrders} orders`}
+          title={t('analytics.avgOrderValue')}
+          value={`${avgOrderValue.toFixed(2)} ${t('common.currency')}`}
+          sub={t('reports.fromOrders', { count: totalOrders })}
           icon="🧾" color="border-purple-500"
         />
         <KpiCard
-          title="Revenue Growth"
+          title={t('reports.revenueGrowth')}
           value={revenueGrowth !== null ? `${revenueGrowth > 0 ? '+' : ''}${revenueGrowth}%` : 'N/A'}
-          sub={`First half vs second half`}
+          sub={t('reports.firstVsSecondHalf')}
           icon={revenueGrowth >= 0 ? '📈' : '📉'}
           color={revenueGrowth >= 0 ? 'border-primary-500' : 'border-red-400'}
         />
       </div>
 
-      {/* Revenue chart (bar) */}
+      {/* Revenue chart */}
       <div className="card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-neutral-800">Daily Revenue — {activePreset}</h2>
+          <h2 className="font-semibold text-neutral-800">
+            {t('reports.dailyRevenue')} — {activePresetLabel}
+          </h2>
           <div className="flex gap-3 text-xs text-neutral-500">
-            {bestDay  && <span>🏆 Best: {bestDay.date} ({bestDay.revenue.toLocaleString()} EGP)</span>}
-            {worstDay && days > 1 && <span>📉 Lowest: {worstDay.date} ({worstDay.revenue.toLocaleString()} EGP)</span>}
+            {bestDay  && <span>🏆 {t('reports.best')}: {bestDay.date} ({bestDay.revenue.toLocaleString()} {t('common.currency')})</span>}
+            {worstDay && days > 1 && <span>📉 {t('reports.lowest')}: {worstDay.date} ({worstDay.revenue.toLocaleString()} {t('common.currency')})</span>}
           </div>
         </div>
         {revData ? (
           <div>
-            {/* Bar chart */}
             <div className="flex items-end gap-px" style={{ height: '120px' }}>
               {revData.map((d, i) => {
                 const max = Math.max(...revData.map(x => x.revenue), 1);
@@ -374,8 +324,8 @@ export default function ReportsPage() {
                     <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-neutral-900 text-white
                                     text-xs rounded-lg px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100
                                     transition-opacity pointer-events-none z-10">
-                      <p className="font-semibold">{d.revenue.toLocaleString()} EGP</p>
-                      <p className="text-neutral-400">{d.date} · {d.orders} orders</p>
+                      <p className="font-semibold">{d.revenue.toLocaleString()} {t('common.currency')}</p>
+                      <p className="text-neutral-400">{d.date} · {d.orders} {t('reports.orders')}</p>
                     </div>
                     <div
                       className={`w-full rounded-t-sm transition-all ${isToday ? 'bg-accent-500' : 'bg-primary-500 hover:bg-primary-600'}`}
@@ -385,7 +335,6 @@ export default function ReportsPage() {
                 );
               })}
             </div>
-            {/* X-axis labels */}
             {days <= 31 && (
               <div className="flex mt-1.5">
                 {revData.map((d, i) => (
@@ -397,13 +346,12 @@ export default function ReportsPage() {
                 ))}
               </div>
             )}
-            {/* Summary row */}
             <div className="grid grid-cols-4 gap-3 mt-5 pt-4 border-t border-neutral-100">
               {[
-                { label: 'Total Revenue',  val: `${totalRevenue.toLocaleString()} EGP` },
-                { label: 'Total Orders',   val: totalOrders },
-                { label: 'Avg/Day',        val: `${avgDailyRev.toFixed(0)} EGP` },
-                { label: 'Avg Order',      val: `${avgOrderValue.toFixed(0)} EGP` },
+                { label: t('analytics.totalRevenue'),  val: `${totalRevenue.toLocaleString()} ${t('common.currency')}` },
+                { label: t('analytics.totalOrders'),   val: totalOrders },
+                { label: t('reports.avgDay'),          val: `${avgDailyRev.toFixed(0)} ${t('common.currency')}` },
+                { label: t('analytics.avgOrderValue'), val: `${avgOrderValue.toFixed(0)} ${t('common.currency')}` },
               ].map(({ label, val }) => (
                 <div key={label} className="text-center">
                   <p className="font-display font-bold text-lg text-neutral-900">{val}</p>
@@ -419,26 +367,25 @@ export default function ReportsPage() {
 
       {/* Orders by status + Category revenue */}
       <div className="grid lg:grid-cols-2 gap-5">
-        {/* Orders status breakdown */}
         <div className="card p-5">
-          <h3 className="font-semibold text-neutral-800 mb-4">Orders Status Breakdown</h3>
+          <h3 className="font-semibold text-neutral-800 mb-4">{t('analytics.ordersByStatus')}</h3>
           {overview ? (
             <div className="space-y-3">
               {[
-                { status: 'pending',    color: 'bg-yellow-400', label: 'Pending' },
-                { status: 'confirmed',  color: 'bg-blue-400',   label: 'Confirmed' },
-                { status: 'processing', color: 'bg-blue-500',   label: 'Processing' },
-                { status: 'shipped',    color: 'bg-orange-400', label: 'Shipped' },
-                { status: 'delivered',  color: 'bg-primary-500',label: 'Delivered' },
-                { status: 'cancelled',  color: 'bg-red-400',    label: 'Cancelled' },
-              ].map(({ status, color, label }) => {
+                { status: 'pending',    color: 'bg-yellow-400' },
+                { status: 'confirmed',  color: 'bg-blue-400'   },
+                { status: 'processing', color: 'bg-blue-500'   },
+                { status: 'shipped',    color: 'bg-orange-400' },
+                { status: 'delivered',  color: 'bg-primary-500'},
+                { status: 'cancelled',  color: 'bg-red-400'    },
+              ].map(({ status, color }) => {
                 const count = overview.orders?.[status] || 0;
                 const total = overview.orders?.total || 1;
                 const pct   = Math.round((count / total) * 100);
                 return (
                   <div key={status}>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="font-medium text-neutral-700">{label}</span>
+                      <span className="font-medium text-neutral-700">{t(`orders.statuses.${status}`, status)}</span>
                       <span className="text-neutral-500">{count} ({pct}%)</span>
                     </div>
                     <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
@@ -451,9 +398,8 @@ export default function ReportsPage() {
           ) : <div className="skeleton h-40 rounded-xl"/>}
         </div>
 
-        {/* Category revenue */}
         <div className="card p-5">
-          <h3 className="font-semibold text-neutral-800 mb-4">Revenue by Category</h3>
+          <h3 className="font-semibold text-neutral-800 mb-4">{t('analytics.revenueByCategory')}</h3>
           {catData ? (
             <div className="space-y-3">
               {catData.slice(0, 7).map(cat => {
@@ -463,7 +409,7 @@ export default function ReportsPage() {
                   <div key={cat.category}>
                     <div className="flex justify-between text-xs mb-1">
                       <span className="font-medium text-neutral-700 capitalize">{cat.category?.replace('-',' ')}</span>
-                      <span className="text-neutral-500">{cat.revenue?.toLocaleString()} EGP · {cat.sold} sold</span>
+                      <span className="text-neutral-500">{cat.revenue?.toLocaleString()} {t('common.currency')} · {cat.sold} {t('reports.sold')}</span>
                     </div>
                     <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
                       <div className="h-full bg-primary-500 rounded-full" style={{ width: `${pct}%` }}/>
@@ -476,127 +422,114 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Top Products in period */}
+      {/* Top Products */}
       <MiniTable
-        title="Top Selling Products"
+        title={t('admin.topProducts')}
+        emptyMsg={t('reports.noSalesData')}
         columns={[
-          { key: '_rank',    label: '#',        render: (_, i) => i + 1 },
-          { key: 'name',     label: 'Product',  render: p => (
+          { key: '_rank',    label: '#',                        render: (_, i) => i + 1 },
+          { key: 'name',     label: t('common.name'),           render: p => (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-neutral-100 overflow-hidden shrink-0">
-                {p.image ? <img src={`${URL_IMAGE}/api/images/${p.image}`} className="w-full h-full object-cover"/> : <span className="flex items-center justify-center h-full text-sm">💊</span>}
+                {p.image
+                  ? <img src={`${URL_IMAGE}/api/images/${p.image}`} className="w-full h-full object-cover" alt={p.name}/>
+                  : <span className="flex items-center justify-center h-full text-sm">💊</span>}
               </div>
               <span className="font-medium text-sm">{p.name}</span>
             </div>
           )},
-          { key: 'category', label: 'Category', render: p => <span className="badge-gray capitalize text-xs">{p.category?.replace('-',' ')}</span> },
-          { key: 'sold',     label: 'Sold',     render: p => <span className="font-bold text-neutral-800">{p.sold}</span> },
-          { key: 'revenue',  label: 'Revenue',  render: p => <span className="font-semibold text-primary-700">{p.revenue?.toLocaleString()} EGP</span> },
-          { key: 'stock',    label: 'Stock',    render: p => <span className={p.stock === 0 ? 'text-red-600 font-bold' : p.stock <= 10 ? 'text-yellow-600 font-bold' : 'text-neutral-700'}>{p.stock}</span> },
+          { key: 'category', label: t('reports.category'),     render: p => <span className="badge-gray capitalize text-xs">{p.category?.replace('-',' ')}</span> },
+          { key: 'sold',     label: t('analytics.unitsSold'),  render: p => <span className="font-bold text-neutral-800">{p.sold}</span> },
+          { key: 'revenue',  label: t('analytics.totalRevenue'), render: p => <span className="font-semibold text-primary-700">{p.revenue?.toLocaleString()} {t('common.currency')}</span> },
+          { key: 'stock',    label: t('analytics.stockLeft'),  render: p => <span className={p.stock === 0 ? 'text-red-600 font-bold' : p.stock <= 10 ? 'text-yellow-600 font-bold' : 'text-neutral-700'}>{p.stock}</span> },
         ].map((c, i) => ({ ...c, render: c.render ? (row) => c.render(row, i) : undefined }))}
         rows={topProducts || []}
-        emptyMsg="No sales data yet"
       />
 
-      {/* ── Export Section ────────────────────────────────────────────────── */}
+      {/* Export Section */}
       <div className="card p-6">
         <div className="mb-5">
-          <h2 className="font-display font-semibold text-xl text-neutral-900">📥 Export Data to Excel</h2>
-          <p className="text-neutral-500 text-sm mt-1">
-            Download individual datasets or the full report as .xlsx files.
-            Date-filtered exports use the period selected above.
-          </p>
+          <h2 className="font-display font-semibold text-xl text-neutral-900">📥 {t('reports.exportTitle')}</h2>
+          <p className="text-neutral-500 text-sm mt-1">{t('reports.exportSubtitle')}</p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Orders export */}
+          {/* Orders */}
           <div className="p-4 border-2 border-neutral-100 rounded-2xl hover:border-primary-200 transition-colors">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">📦</span>
               <div>
-                <p className="font-semibold text-neutral-800">Orders Report</p>
-                <p className="text-xs text-neutral-400">Filtered by date range</p>
+                <p className="font-semibold text-neutral-800">{t('reports.exportCards.orders.title')}</p>
+                <p className="text-xs text-neutral-400">{t('reports.exportCards.orders.sub')}</p>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mb-3">
-              Includes: order number, customer, items count, totals, payment, status, address, date
-            </p>
-            <ExportBtn label="Export Orders" onClick={() => handleExport('orders')} loading={exporting.orders}/>
+            <p className="text-xs text-neutral-500 mb-3">{t('reports.exportCards.orders.desc')}</p>
+            <ExportBtn label={t('reports.exportCards.orders.btn')} onClick={() => handleExport('orders')} loading={exporting.orders}/>
           </div>
 
-          {/* Products export */}
+          {/* Products */}
           <div className="p-4 border-2 border-neutral-100 rounded-2xl hover:border-primary-200 transition-colors">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">💊</span>
               <div>
-                <p className="font-semibold text-neutral-800">Products Catalog</p>
-                <p className="text-xs text-neutral-400">All products</p>
+                <p className="font-semibold text-neutral-800">{t('reports.exportCards.products.title')}</p>
+                <p className="text-xs text-neutral-400">{t('reports.exportCards.products.sub')}</p>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mb-3">
-              Includes: name, category, SKU, price, compare price, stock, featured, status
-            </p>
-            <ExportBtn label="Export Products" onClick={() => handleExport('products')} loading={exporting.products}/>
+            <p className="text-xs text-neutral-500 mb-3">{t('reports.exportCards.products.desc')}</p>
+            <ExportBtn label={t('reports.exportCards.products.btn')} onClick={() => handleExport('products')} loading={exporting.products}/>
           </div>
 
-          {/* Inventory export */}
+          {/* Inventory */}
           <div className="p-4 border-2 border-neutral-100 rounded-2xl hover:border-primary-200 transition-colors">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">🏪</span>
               <div>
-                <p className="font-semibold text-neutral-800">Inventory Report</p>
-                <p className="text-xs text-neutral-400">Low stock & out of stock</p>
+                <p className="font-semibold text-neutral-800">{t('reports.exportCards.inventory.title')}</p>
+                <p className="text-xs text-neutral-400">{t('reports.exportCards.inventory.sub')}</p>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mb-3">
-              Includes: name, category, SKU, price, current stock, stock status
-            </p>
-            <ExportBtn label="Export Inventory" onClick={() => handleExport('inventory')} loading={exporting.inventory}/>
+            <p className="text-xs text-neutral-500 mb-3">{t('reports.exportCards.inventory.desc')}</p>
+            <ExportBtn label={t('reports.exportCards.inventory.btn')} onClick={() => handleExport('inventory')} loading={exporting.inventory}/>
           </div>
 
-          {/* Users export */}
+          {/* Users */}
           <div className="p-4 border-2 border-neutral-100 rounded-2xl hover:border-primary-200 transition-colors">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">👥</span>
               <div>
-                <p className="font-semibold text-neutral-800">Patients List</p>
-                <p className="text-xs text-neutral-400">All registered patients</p>
+                <p className="font-semibold text-neutral-800">{t('reports.exportCards.users.title')}</p>
+                <p className="text-xs text-neutral-400">{t('reports.exportCards.users.sub')}</p>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mb-3">
-              Includes: name, email, phone, city, role, status, join date, last login
-            </p>
-            <ExportBtn label="Export Patients" onClick={() => handleExport('users')} loading={exporting.users}/>
+            <p className="text-xs text-neutral-500 mb-3">{t('reports.exportCards.users.desc')}</p>
+            <ExportBtn label={t('reports.exportCards.users.btn')} onClick={() => handleExport('users')} loading={exporting.users}/>
           </div>
 
-          {/* Appointments export */}
+          {/* Appointments */}
           <div className="p-4 border-2 border-neutral-100 rounded-2xl hover:border-primary-200 transition-colors">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">📅</span>
               <div>
-                <p className="font-semibold text-neutral-800">Appointments Report</p>
-                <p className="text-xs text-neutral-400">Filtered by date range</p>
+                <p className="font-semibold text-neutral-800">{t('reports.exportCards.appointments.title')}</p>
+                <p className="text-xs text-neutral-400">{t('reports.exportCards.appointments.sub')}</p>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mb-3">
-              Includes: patient, doctor, service, date, time, status, notes, booking date
-            </p>
-            <ExportBtn label="Export Appointments" onClick={() => handleExport('appointments')} loading={exporting.appointments}/>
+            <p className="text-xs text-neutral-500 mb-3">{t('reports.exportCards.appointments.desc')}</p>
+            <ExportBtn label={t('reports.exportCards.appointments.btn')} onClick={() => handleExport('appointments')} loading={exporting.appointments}/>
           </div>
 
-          {/* Returns export */}
+          {/* Returns */}
           <div className="p-4 border-2 border-neutral-100 rounded-2xl hover:border-primary-200 transition-colors">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">↩️</span>
               <div>
-                <p className="font-semibold text-neutral-800">تقرير المرتجعات</p>
-                <p className="text-xs text-neutral-400">مفلتر بالتاريخ</p>
+                <p className="font-semibold text-neutral-800">{t('reports.exportCards.returns.title')}</p>
+                <p className="text-xs text-neutral-400">{t('reports.exportCards.returns.sub')}</p>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mb-3">
-              يشمل: رقم الإرجاع، العميل، الطلب، المنتجات، مبلغ الاسترداد، الحالة
-            </p>
-            <ExportBtn label="تصدير المرتجعات" onClick={() => handleExport('returns')} loading={exporting.returns}/>
+            <p className="text-xs text-neutral-500 mb-3">{t('reports.exportCards.returns.desc')}</p>
+            <ExportBtn label={t('reports.exportCards.returns.btn')} onClick={() => handleExport('returns')} loading={exporting.returns}/>
           </div>
 
           {/* Full report */}
@@ -604,26 +537,20 @@ export default function ReportsPage() {
             <div className="flex items-center gap-3 mb-3">
               <span className="text-2xl">📊</span>
               <div>
-                <p className="font-semibold text-neutral-800">Full Pharmacy Report</p>
-                <p className="text-xs text-primary-600 font-medium">6 sheets in one file</p>
+                <p className="font-semibold text-neutral-800">{t('reports.exportCards.full.title')}</p>
+                <p className="text-xs text-primary-600 font-medium">{t('reports.exportCards.full.sub')}</p>
               </div>
             </div>
-            <p className="text-xs text-neutral-500 mb-3">
-              Revenue Summary + Orders + Products + Patients + Appointments + Category Breakdown
-            </p>
-            <button onClick={handleFullReport} disabled={exporting.full}
-              className="btn-primary w-full justify-center">
-              {exporting.full ? 'Generating…' : '📊 Export Full Report'}
+            <p className="text-xs text-neutral-500 mb-3">{t('reports.exportCards.full.desc')}</p>
+            <button onClick={handleFullReport} disabled={exporting.full} className="btn-primary w-full justify-center">
+              {exporting.full ? t('reports.generating') : `📊 ${t('reports.exportFullBtn')}`}
             </button>
           </div>
         </div>
 
-        {/* Info note */}
         <div className="mt-5 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
           <p className="text-xs text-neutral-600">
-            <strong>📌 Note:</strong> Files open directly in Microsoft Excel, Google Sheets, or LibreOffice Calc.
-            Date-filtered exports (Orders & Appointments) use the period selected above.
-            Products, Patients, and Inventory always export all records.
+            <strong>📌 {t('common.notes')}:</strong> {t('reports.exportNote')}
           </p>
         </div>
       </div>

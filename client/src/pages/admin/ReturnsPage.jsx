@@ -9,29 +9,34 @@ const URL_IMAGE = import.meta.env.VITE_URL_IMAGE;
 
 // ── Config ────────────────────────────────────────────────────────────────
 const STATUS_CFG = {
-  pending:            { label:'Pending',            badge:'badge-yellow', icon:'⏳' },
-  partially_approved: { label:'Partially Approved', badge:'badge-orange', icon:'⚡' },
-  approved:           { label:'Approved',           badge:'badge-green',  icon:'✅' },
-  rejected:           { label:'Rejected',           badge:'badge-red',    icon:'❌' },
-  received:           { label:'Received',           badge:'badge-blue',   icon:'📦' },
-  refunded:           { label:'Refunded',           badge:'badge-gray',   icon:'💰' },
-  closed:             { label:'Closed',             badge:'badge-gray',   icon:'🔒' },
+  pending:            { labelKey:'status.pending',            badge:'badge-yellow', icon:'⏳' },
+  partially_approved: { labelKey:'status.partially_approved', badge:'badge-orange', icon:'⚡' },
+  approved:           { labelKey:'status.approved',           badge:'badge-green',  icon:'✅' },
+  rejected:           { labelKey:'returns.statuses.rejected',           badge:'badge-red',    icon:'❌' },
+  received:           { labelKey:'status.received',           badge:'badge-blue',   icon:'📦' },
+  refunded:           { labelKey:'status.refunded',           badge:'badge-gray',   icon:'💰' },
+  closed:             { labelKey:'status.closed',             badge:'badge-gray',   icon:'🔒' },
 };
 
 const ITEM_STATUS_CFG = {
-  pending:  { color:'bg-yellow-50 border-yellow-200 text-yellow-700', icon:'⏳', label:'Pending'  },
-  approved: { color:'bg-primary-50 border-primary-200 text-primary-700', icon:'✅', label:'Approved' },
-  rejected: { color:'bg-red-50 border-red-200 text-red-700',         icon:'❌', label:'Rejected' },
+  pending:  { color:'bg-yellow-50 border-yellow-200 text-yellow-700',       icon:'⏳', labelKey:'status.pending'  },
+  approved: { color:'bg-primary-50 border-primary-200 text-primary-700',    icon:'✅', labelKey:'status.approved' },
+  rejected: { color:'bg-red-50 border-red-200 text-red-700',                icon:'❌', labelKey:'returns.statuses.rejected' },
 };
 
-const REASON_LABELS = {
-  wrong_product:'Wrong Product', damaged:'Damaged', expired:'Expired',
-  not_as_described:'Not as Described', changed_mind:'Changed Mind', other:'Other',
+const REASON_LABEL_KEYS = {
+  wrong_product:    'reasons.wrong_product',
+  damaged:          'reasons.damaged',
+  expired:          'reasons.expired',
+  not_as_described: 'reasons.not_as_described',
+  changed_mind:     'reasons.changed_mind',
+  other:            'reasons.other',
 };
 
 // ── Item Decision Row ─────────────────────────────────────────────────────
 function ItemDecisionRow({ item, returnId, onDecided }) {
   const qc  = useQueryClient();
+  const { t } = useTranslation();
   const [showForm,    setShowForm]    = useState(false);
   const [decision,    setDecision]    = useState('');
   const [adminNote,   setAdminNote]   = useState(item.adminNote || '');
@@ -46,7 +51,11 @@ function ItemDecisionRow({ item, returnId, onDecided }) {
       rejectionReason: decision === 'rejected' ? rejectReason.trim() : undefined,
     }),
     onSuccess: (res) => {
-      toast.success(`Item ${decision} ✓`);
+      toast.success(
+        decision === 'approved'
+          ? t('admin.returns.itemApproved')
+          : t('admin.returns.itemRejected')
+      );
       qc.invalidateQueries(['admin-return', returnId]);
       qc.invalidateQueries(['admin-returns']);
       setShowForm(false);
@@ -68,15 +77,15 @@ function ItemDecisionRow({ item, returnId, onDecided }) {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{item.name}</p>
           <p className="text-xs opacity-70">
-            Returning {item.returnedQty} of {item.orderedQty} ·
-            {REASON_LABELS[item.reason] || item.reason}
+            {t('admin.returns.returning')} {item.returnedQty} {t('admin.returns.of')} {item.orderedQty} ·&nbsp;
+            {t(REASON_LABEL_KEYS[item.reason]) || item.reason}
           </p>
           {item.reasonDetails && (
             <p className="text-xs opacity-60 italic mt-0.5">"{item.reasonDetails}"</p>
           )}
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xs font-bold">{iCfg.icon} {iCfg.label}</p>
+          <p className="text-xs font-bold">{iCfg.icon} {t(iCfg.labelKey)}</p>
           <p className="text-xs font-semibold mt-0.5">
             {(item.price * item.returnedQty).toFixed(2)} EGP
           </p>
@@ -90,11 +99,11 @@ function ItemDecisionRow({ item, returnId, onDecided }) {
             <p className="text-xs opacity-80">📝 {item.adminNote}</p>
           )}
           {item.rejectionReason && (
-            <p className="text-xs font-medium">❌ Reason: {item.rejectionReason}</p>
+            <p className="text-xs font-medium">❌ {t('admin.returns.reasonLabel')} {item.rejectionReason}</p>
           )}
           {item.decidedAt && (
             <p className="text-xs opacity-60">
-              {format(new Date(item.decidedAt), 'dd MMM yyyy HH:mm')}
+              {t('admin.returns.decidedAt')}: {format(new Date(item.decidedAt), 'dd MMM yyyy HH:mm')}
             </p>
           )}
         </div>
@@ -109,32 +118,34 @@ function ItemDecisionRow({ item, returnId, onDecided }) {
                 onClick={() => { setDecision('approved'); setShowForm(true); }}
                 className="flex-1 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded-lg
                            hover:bg-primary-700 transition-colors">
-                ✅ Approve
+                ✅ {t('admin.returns.approveItem')}
               </button>
               <button
                 onClick={() => { setDecision('rejected'); setShowForm(true); }}
                 className="flex-1 py-1.5 bg-red-500 text-white text-xs font-semibold rounded-lg
                            hover:bg-red-600 transition-colors">
-                ❌ Reject
+                ❌ {t('admin.returns.rejectItem')}
               </button>
             </div>
           ) : (
             <div className="space-y-2">
               <p className="text-xs font-semibold">
-                {decision === 'approved' ? '✅ Approving item' : '❌ Rejecting item'}
+                {decision === 'approved'
+                  ? `✅ ${t('admin.returns.approvingItem')}`
+                  : `❌ ${t('admin.returns.rejectingItem')}`}
               </p>
 
               {decision === 'rejected' && (
                 <input className="input text-xs py-1.5 bg-white/80 border-white"
                   value={rejectReason}
                   onChange={e => setRejectReason(e.target.value)}
-                  placeholder="Rejection reason (required) *"/>
+                  placeholder={t('admin.returns.rejectionReasonRequired')}/>
               )}
 
               <input className="input text-xs py-1.5 bg-white/80 border-white"
                 value={adminNote}
                 onChange={e => setAdminNote(e.target.value)}
-                placeholder="Admin note (optional)…"/>
+                placeholder={t('admin.returns.adminNoteOptional')}/>
 
               <div className="flex gap-2">
                 <button
@@ -147,12 +158,12 @@ function ItemDecisionRow({ item, returnId, onDecided }) {
                     disabled:opacity-50 transition-colors
                     ${decision === 'approved' ? 'bg-primary-600 hover:bg-primary-700'
                       : 'bg-red-500 hover:bg-red-600'}`}>
-                  {decide.isPending ? '...' : 'Confirm'}
+                  {decide.isPending ? '...' : t('admin.returns.confirmDecision')}
                 </button>
                 <button
                   onClick={() => { setShowForm(false); setDecision(''); }}
                   className="px-3 py-1.5 text-xs bg-white/60 rounded-lg hover:bg-white/80">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
@@ -187,8 +198,12 @@ function ReturnModal({ returnId, onClose }) {
       adminNote:       adminNotes.trim() || undefined,
       rejectionReason: bulkDecision === 'rejected' ? rejectReason.trim() : undefined,
     }),
-    onSuccess: (res) => {
-      toast.success(`All items ${bulkDecision} ✓`);
+    onSuccess: () => {
+      toast.success(
+        bulkDecision === 'approved'
+          ? t('admin.returns.allItemsApproved')
+          : t('admin.returns.allItemsRejected')
+      );
       qc.invalidateQueries(['admin-return', returnId]);
       qc.invalidateQueries(['admin-returns']);
       setShowBulk(false);
@@ -203,7 +218,8 @@ function ReturnModal({ returnId, onClose }) {
       refundMethod: status === 'refunded' ? refundMethod : undefined,
     }),
     onSuccess: (res) => {
-      toast.success(`Return marked as ${res.data.data.status} ✓`);
+      const statusCfg = STATUS_CFG[res.data.data.status];
+      toast.success(`${statusCfg?.icon || ''} ${t(statusCfg?.labelKey || 'status.updated')} ✓`);
       qc.invalidateQueries(['admin-return', returnId]);
       qc.invalidateQueries(['admin-returns']);
     },
@@ -219,7 +235,7 @@ function ReturnModal({ returnId, onClose }) {
     </div>
   );
 
-  const cfg          = STATUS_CFG[ret.status] || { label: ret.status, badge:'badge-gray', icon:'•' };
+  const cfg          = STATUS_CFG[ret.status] || { labelKey: 'status.unknown', badge:'badge-gray', icon:'•' };
   const pendingCount = ret.items?.filter(i => i.status === 'pending').length || 0;
   const approvedAmt  = ret.items?.filter(i => i.status === 'approved')
     .reduce((s, i) => s + i.price * i.returnedQty, 0) || 0;
@@ -240,7 +256,7 @@ function ReturnModal({ returnId, onClose }) {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-mono font-semibold text-lg">{ret.returnNumber}</h2>
-                <span className={cfg.badge}>{cfg.icon} {cfg.label}</span>
+                <span className={cfg.badge}>{cfg.icon} {t(cfg.labelKey)}</span>
               </div>
               <p className="text-xs text-neutral-400 mt-0.5">
                 {format(new Date(ret.createdAt), 'dd MMM yyyy HH:mm')}
@@ -255,17 +271,17 @@ function ReturnModal({ returnId, onClose }) {
           {/* Summary strip */}
           <div className="flex flex-wrap gap-4 mt-3 text-xs">
             <span className="text-neutral-500">
-              Patient: <strong className="text-neutral-700">{ret.patient?.name}</strong>
+              {t('admin.returns.patientLabel')}: <strong className="text-neutral-700">{ret.patient?.name}</strong>
             </span>
             <span className="text-neutral-500">
-              Order: <strong className="text-primary-700">{ret.order?.orderNumber}</strong>
+              {t('admin.returns.originalOrder')}: <strong className="text-primary-700">{ret.order?.orderNumber}</strong>
             </span>
             <span className="text-neutral-500">
-              Items: <strong>{ret.items?.length}</strong>
+              {t('admin.returns.itemsCount')} <strong>{ret.items?.length}</strong>
             </span>
             {approvedAmt > 0 && (
               <span className="text-primary-600 font-semibold">
-                Approved refund: {approvedAmt.toFixed(2)} EGP
+                {t('admin.returns.approvedRefund')} {approvedAmt.toFixed(2)} EGP
               </span>
             )}
           </div>
@@ -275,16 +291,16 @@ function ReturnModal({ returnId, onClose }) {
           {/* Patient info */}
           <div className="bg-neutral-50 rounded-xl p-4 grid sm:grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-neutral-400 mb-1">Patient</p>
+              <p className="text-xs text-neutral-400 mb-1">{t('admin.returns.patientLabel')}</p>
               <p className="font-semibold">{ret.patient?.name}</p>
               <p className="text-neutral-500 text-xs">{ret.patient?.email}</p>
               <p className="text-neutral-500 text-xs">{ret.patient?.phone}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400 mb-1">Original Order</p>
+              <p className="text-xs text-neutral-400 mb-1">{t('admin.returns.originalOrder')}</p>
               <p className="font-mono font-semibold text-primary-700">{ret.order?.orderNumber}</p>
               <p className="text-neutral-500 text-xs">
-                Total: {ret.order?.total?.toFixed(2)} EGP
+                {t('admin.returns.orderTotal')} {ret.order?.total?.toFixed(2)} EGP
               </p>
               {ret.order?.createdAt && (
                 <p className="text-neutral-500 text-xs">
@@ -299,7 +315,7 @@ function ReturnModal({ returnId, onClose }) {
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-amber-800">
-                  {pendingCount} item(s) awaiting decision
+                  {t('admin.returns.awaitingDecision', { count: pendingCount })}
                 </p>
                 {!showBulk && (
                   <div className="flex gap-2">
@@ -307,13 +323,13 @@ function ReturnModal({ returnId, onClose }) {
                       onClick={() => { setBulkDecision('approved'); setShowBulk(true); }}
                       className="px-3 py-1.5 bg-primary-600 text-white text-xs rounded-lg font-medium
                                  hover:bg-primary-700 transition-colors">
-                      ✅ Approve All
+                      ✅ {t('admin.returns.approveAll')}
                     </button>
                     <button
                       onClick={() => { setBulkDecision('rejected'); setShowBulk(true); }}
                       className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg font-medium
                                  hover:bg-red-600 transition-colors">
-                      ❌ Reject All
+                      ❌ {t('admin.returns.rejectAll')}
                     </button>
                   </div>
                 )}
@@ -325,12 +341,12 @@ function ReturnModal({ returnId, onClose }) {
                     <input className="input text-sm"
                       value={rejectReason}
                       onChange={e => setRejectReason(e.target.value)}
-                      placeholder="Rejection reason for all items *"/>
+                      placeholder={t('admin.returns.rejectionReasonAll')}/>
                   )}
                   <input className="input text-sm"
                     value={adminNotes}
                     onChange={e => setAdminNotes(e.target.value)}
-                    placeholder="Admin note (optional)…"/>
+                    placeholder={t('admin.returns.adminNoteOptional')}/>
                   <div className="flex gap-2">
                     <button
                       onClick={() => bulkDecide.mutate()}
@@ -344,13 +360,15 @@ function ReturnModal({ returnId, onClose }) {
                           ? 'bg-primary-600 hover:bg-primary-700'
                           : 'bg-red-500 hover:bg-red-600'}`}>
                       {bulkDecide.isPending
-                        ? 'Processing…'
-                        : `Confirm ${bulkDecision === 'approved' ? 'Approve' : 'Reject'} All`}
+                        ? t('admin.returns.processing')
+                        : bulkDecision === 'approved'
+                          ? t('admin.returns.confirmApproveAll')
+                          : t('admin.returns.confirmRejectAll')}
                     </button>
                     <button
                       onClick={() => { setShowBulk(false); setBulkDecision(''); }}
                       className="px-4 py-2 btn-secondary text-sm">
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   </div>
                 </div>
@@ -361,7 +379,7 @@ function ReturnModal({ returnId, onClose }) {
           {/* Per-item decision rows */}
           <div>
             <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-              Items ({ret.items?.length})
+              {t('admin.returns.colItems')} ({ret.items?.length})
             </p>
             <div className="space-y-2">
               {ret.items?.map(item => (
@@ -377,16 +395,16 @@ function ReturnModal({ returnId, onClose }) {
 
           {/* Admin notes field */}
           <div>
-            <label className="label">Admin Notes (visible to patient)</label>
+            <label className="label">{t('admin.returns.adminNotesVisible')}</label>
             <textarea className="input text-sm" rows={2}
               value={adminNotes}
               onChange={e => setAdminNotes(e.target.value)}
-              placeholder="Note for patient…"/>
+              placeholder={t('admin.returns.noteForPatient')}/>
           </div>
 
           {/* Status actions */}
           <div className="border-t border-neutral-100 pt-4 space-y-3">
-            <p className="text-sm font-semibold text-neutral-700">Move Return Status</p>
+            <p className="text-sm font-semibold text-neutral-700">{t('admin.returns.moveStatus')}</p>
 
             <div className="grid grid-cols-3 gap-2">
               {canReceive && (
@@ -395,7 +413,7 @@ function ReturnModal({ returnId, onClose }) {
                   disabled={setStatus.isPending}
                   className="py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl
                              hover:bg-blue-700 transition-colors disabled:opacity-50">
-                  📦 Mark Received
+                  📦 {t('admin.returns.markReceived')}
                 </button>
               )}
               {canRefund && (
@@ -403,16 +421,16 @@ function ReturnModal({ returnId, onClose }) {
                   <select className="input text-sm"
                     value={refundMethod}
                     onChange={e => setRefundMethod(e.target.value)}>
-                    <option value="cash">💵 Cash Refund</option>
-                    <option value="credit_card">💳 Credit Card</option>
-                    <option value="wallet">📱 Wallet</option>
+                    <option value="cash">💵 {t('admin.returns.cashRefund')}</option>
+                    <option value="credit_card">💳 {t('admin.returns.creditCard')}</option>
+                    <option value="wallet">📱 {t('admin.returns.wallet')}</option>
                   </select>
                   <button
                     onClick={() => setStatus.mutate('refunded')}
                     disabled={setStatus.isPending}
                     className="w-full py-2.5 bg-primary-600 text-white text-sm font-semibold
                                rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50">
-                    💰 Process Refund ({approvedAmt.toFixed(2)} EGP)
+                    💰 {t('admin.returns.processRefund')} ({approvedAmt.toFixed(2)} EGP)
                   </button>
                 </div>
               )}
@@ -422,13 +440,15 @@ function ReturnModal({ returnId, onClose }) {
                   disabled={setStatus.isPending}
                   className="py-2.5 bg-neutral-500 text-white text-xs font-semibold rounded-xl
                              hover:bg-neutral-600 transition-colors disabled:opacity-50">
-                  🔒 Close Return
+                  🔒 {t('admin.returns.closeReturn')}
                 </button>
               )}
             </div>
 
             {setStatus.isPending && (
-              <p className="text-xs text-neutral-400 text-center animate-pulse">Processing…</p>
+              <p className="text-xs text-neutral-400 text-center animate-pulse">
+                {t('admin.returns.processing')}
+              </p>
             )}
           </div>
         </div>
@@ -439,7 +459,6 @@ function ReturnModal({ returnId, onClose }) {
 
 // ── Main Admin Returns Page ───────────────────────────────────────────────
 export default function AdminReturnsPage() {
-  const qc = useQueryClient();
   const { t } = useTranslation();
   const [selectedId,   setSelectedId]   = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
@@ -467,14 +486,16 @@ export default function AdminReturnsPage() {
   const stats     = statsData;
 
   const STATUS_FILTERS = [
-    { value:'',                   label:'All' },
-    { value:'pending',            label:'Pending' },
-    { value:'partially_approved', label:'Partial' },
-    { value:'approved',           label:'Approved' },
-    { value:'rejected',           label:'Rejected' },
-    { value:'received',           label:'Received' },
-    { value:'refunded',           label:'Refunded' },
-    { value:'closed',             label:'Closed' },
+    { value:'',                   labelKey:'admin.returns.filterAll' },
+    { value:'pending',            labelKey:'admin.returns.statPending' },
+    { value:'partially_approved', labelKey:'admin.returns.filterPartial' },
+    { value:'approved',           labelKey:'admin.returns.statApproved' },
+    { value:'rejected',           labelKey:'admin.returns.statRejected' },
+  
+ 
+    { value:'received', labelKey:'returns.statuses.received' },
+    { value:'refunded', labelKey:'returns.statuses.refunded' },
+    { value:'closed',   labelKey:'returns.statuses.closed' },
   ];
 
   return (
@@ -483,16 +504,16 @@ export default function AdminReturnsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
           <h1 className="font-display text-2xl font-bold text-neutral-900">
-            {t('admin.returns')}
-          </h1>
+            {t('admin.returns.title') 
+            }      </h1>
           <p className="text-neutral-500 text-sm mt-0.5">
-            Manage partial & full return requests
+            {t('admin.returns.pageSubtitle')}
           </p>
         </div>
         {stats?.pending > 0 && (
           <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200
                           rounded-xl text-sm text-amber-700 font-medium">
-            ⏳ {stats.pending} pending review
+            ⏳ {t('admin.returns.pendingReview', { count: stats.pending })}
           </div>
         )}
       </div>
@@ -500,20 +521,20 @@ export default function AdminReturnsPage() {
       {/* Stats cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-5">
         {[
-          { label:'Total',     val: stats?.total                    || 0, color:'bg-neutral-50',  icon:'📋' },
-          { label:'Pending',   val: stats?.byStatus?.pending        || 0, color:'bg-yellow-50',   icon:'⏳' },
-          { label:'Partial',   val: stats?.byStatus?.partially_approved || 0, color:'bg-orange-50', icon:'⚡' },
-          { label:'Approved',  val: stats?.byStatus?.approved       || 0, color:'bg-primary-50',  icon:'✅' },
-          { label:'Rejected',  val: stats?.byStatus?.rejected       || 0, color:'bg-red-50',      icon:'❌' },
-          { label:'Refunded',  val: stats?.totalRefunds
+          { labelKey:'admin.returns.statTotal',    val: stats?.total                         || 0,       color:'bg-neutral-50',  icon:'📋' },
+          { labelKey:'admin.returns.statPending',  val: stats?.byStatus?.pending             || 0,       color:'bg-yellow-50',   icon:'⏳' },
+          { labelKey:'admin.returns.statPartial',  val: stats?.byStatus?.partially_approved  || 0,       color:'bg-orange-50',   icon:'⚡' },
+          { labelKey:'admin.returns.statApproved', val: stats?.byStatus?.approved            || 0,       color:'bg-primary-50',  icon:'✅' },
+          { labelKey:'admin.returns.statRejected', val: stats?.byStatus?.rejected            || 0,       color:'bg-red-50',      icon:'❌' },
+          { labelKey:'admin.returns.statRefunded', val: stats?.totalRefunds
               ? `${Number(stats.totalRefunds).toLocaleString()} EGP`
-              : '0 EGP',                                                   color:'bg-blue-50',    icon:'💰' },
-        ].map(({ label, val, color, icon }) => (
-          <div key={label} className={`card p-3 flex items-center gap-2 ${color}`}>
+              : '0 EGP',                                                                                  color:'bg-blue-50',    icon:'💰' },
+        ].map(({ labelKey, val, color, icon }) => (
+          <div key={labelKey} className={`card p-3 flex items-center gap-2 ${color}`}>
             <span className="text-lg">{icon}</span>
             <div>
               <p className="font-bold text-neutral-900 text-sm">{val}</p>
-              <p className="text-xs text-neutral-500">{label}</p>
+              <p className="text-xs text-neutral-500">{t(labelKey)}</p>
             </div>
           </div>
         ))}
@@ -530,7 +551,7 @@ export default function AdminReturnsPage() {
                 ${statusFilter === sf.value
                   ? 'bg-primary-600 text-white border-primary-600'
                   : 'bg-white border-neutral-200 text-neutral-600 hover:border-primary-300'}`}>
-              {sf.label}
+              {t(sf.labelKey)}
             </button>
           ))}
         </div>
@@ -544,7 +565,7 @@ export default function AdminReturnsPage() {
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input className="input pl-9 text-sm py-2"
-            placeholder="Search by return number…"
+            placeholder={t('admin.returns.searchPlaceholder')}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}/>
         </div>
@@ -559,10 +580,10 @@ export default function AdminReturnsPage() {
         ) : returns.length === 0 ? (
           <div className="p-16 text-center">
             <p className="text-4xl mb-3">↩️</p>
-            <p className="font-semibold text-neutral-700">No returns found</p>
+            <p className="font-semibold text-neutral-700">{t('admin.returns.noReturnsFound')}</p>
             {(statusFilter || search) && (
               <button onClick={() => { setStatusFilter(''); setSearch(''); }}
-                className="btn-secondary mt-4">Clear filters</button>
+                className="btn-secondary mt-4">{t('admin.returns.clearFilters')}</button>
             )}
           </div>
         ) : (
@@ -570,20 +591,20 @@ export default function AdminReturnsPage() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Return #</th>
-                  <th>Patient</th>
-                  <th>Order</th>
-                  <th>Items</th>
-                  <th>Pending</th>
-                  <th>Est. Refund</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Action</th>
+                  <th>{t('admin.returns.colReturnNum')}</th>
+                  <th>{t('admin.returns.colPatient')}</th>
+                  <th>{t('admin.returns.colOrder')}</th>
+                  <th>{t('admin.returns.colItems')}</th>
+                  <th>{t('admin.returns.colPending')}</th>
+                  <th>{t('admin.returns.colEstRefund')}</th>
+                  <th>{t('admin.returns.colStatus')}</th>
+                  <th>{t('admin.returns.colDate')}</th>
+                  <th>{t('admin.returns.colAction')}</th>
                 </tr>
               </thead>
               <tbody>
                 {returns.map(ret => {
-                  const cfg          = STATUS_CFG[ret.status] || { label:ret.status, badge:'badge-gray', icon:'•' };
+                  const cfg          = STATUS_CFG[ret.status] || { labelKey:'status.unknown', badge:'badge-gray', icon:'•' };
                   const pendingItems = ret.items?.filter(i => i.status === 'pending').length || 0;
                   const estRefund    = ret.items
                     ?.filter(i => i.status === 'approved')
@@ -602,12 +623,12 @@ export default function AdminReturnsPage() {
                         {ret.order?.orderNumber}
                       </td>
                       <td className="text-sm text-neutral-600">
-                        {ret.items?.length} item(s)
+                        {ret.items?.length} {t('admin.returns.colItems').toLowerCase()}
                       </td>
                       <td>
                         {pendingItems > 0 ? (
                           <span className="badge-yellow text-xs font-bold">
-                            {pendingItems} pending
+                            {t('admin.returns.itemsPending', { count: pendingItems })}
                           </span>
                         ) : (
                           <span className="text-xs text-neutral-400">—</span>
@@ -616,12 +637,12 @@ export default function AdminReturnsPage() {
                       <td className="font-semibold text-primary-700 text-sm">
                         {estRefund > 0
                           ? `${estRefund.toFixed(2)} EGP`
-                          : <span className="text-neutral-400 text-xs">Pending</span>
+                          : <span className="text-neutral-400 text-xs">{t('admin.returns.statPending')}</span>
                         }
                       </td>
                       <td>
                         <span className={`${cfg.badge} text-xs`}>
-                          {cfg.icon} {cfg.label}
+                          {cfg.icon} {t(cfg.labelKey)}
                         </span>
                       </td>
                       <td className="text-xs text-neutral-500">
@@ -631,7 +652,7 @@ export default function AdminReturnsPage() {
                         <button
                           onClick={() => setSelectedId(ret._id)}
                           className="btn-secondary btn-sm">
-                          Manage
+                          {t('admin.returns.manageBtn')}
                         </button>
                       </td>
                     </tr>
@@ -650,7 +671,7 @@ export default function AdminReturnsPage() {
             </p>
             <div className="flex gap-1">
               <button disabled={meta.page<=1} onClick={()=>setPage(p=>p-1)}
-                className="btn-ghost btn-sm disabled:opacity-40">← Prev</button>
+                className="btn-ghost btn-sm disabled:opacity-40">← {t('common.prev')}</button>
               {[...Array(Math.min(meta.totalPages, 7))].map((_, i) => (
                 <button key={i+1} onClick={()=>setPage(i+1)}
                   className={`w-8 h-8 rounded-lg text-sm ${meta.page===i+1
@@ -659,7 +680,7 @@ export default function AdminReturnsPage() {
                 </button>
               ))}
               <button disabled={meta.page>=meta.totalPages} onClick={()=>setPage(p=>p+1)}
-                className="btn-ghost btn-sm disabled:opacity-40">Next →</button>
+                className="btn-ghost btn-sm disabled:opacity-40">{t('common.next')} →</button>
             </div>
           </div>
         )}

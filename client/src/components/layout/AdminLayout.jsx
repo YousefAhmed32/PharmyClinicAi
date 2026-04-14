@@ -29,7 +29,7 @@ export default function AdminLayout() {
     { to:'/admin/reports',       label: t('admin.reports'),      icon:'📄' },
     { to:'/admin/inventory',     label: t('admin.inventory'),    icon:'🏪' },
     { to:'/admin/prescriptions', label: t('admin.prescriptions'),icon:'📋' },
-    { to:'/admin/returns',       label: t('admin.returns'),      icon:'↩️' },
+    { to:'/admin/returns',       label: t('admin.returns.title'),      icon:'↩️' },
     { to:'/admin/interactions',  label: t('admin.interactions'), icon:'⚗️' },
     { divider: true },
     { to:'/ai-assistant',        label: t('admin.aiAssistant'),  icon:'🤖' },
