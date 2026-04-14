@@ -5,6 +5,7 @@ import { useDebouncedCallback } from '@/hooks/useCommon';
 import { blogAPI } from '@/api/services';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+const URL_IMAGE = import.meta.env.VITE_URL_IMAGE;
 
 const CATS = ["health-tips","medications","nutrition","diseases","wellness","news","other"];
 const EMPTY = { title:"", summary:"", content:"", category:"health-tips", tags:"", status:"draft" };
@@ -91,7 +92,7 @@ function ArticleModal({ editing, showModal, onClose, onSave, isSaving }) {
                   <label className="label">{t('admin.coverImage')}</label>
                   <div className="flex items-start gap-4">
                     <div className="w-32 h-20 rounded-xl bg-neutral-100 overflow-hidden flex items-center justify-center border-2 border-dashed border-neutral-200 shrink-0">
-                      {preview ? <img src={preview} alt="" className="w-full h-full object-cover"/> : <span className="text-2xl">🖼️</span>}
+                      {preview ? <img  src={`${URL_IMAGE}/api/images/${preview}`} alt="" className="w-full h-full object-cover"/> : <span className="text-2xl">🖼️</span>}
                     </div>
                     <div>
                       <input type="file" accept="image/*" onChange={e => { const file=e.target.files[0]; if(file){setImageFile(file);setPreview(URL.createObjectURL(file));} }}
@@ -305,7 +306,7 @@ export default function AdminBlogPage() {
                     <td>
                       <div className="flex items-center gap-3 max-w-[260px]">
                         <div className="w-12 h-9 rounded-lg bg-neutral-100 overflow-hidden shrink-0">
-                          {a.image ? <img src={a.image} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-lg">📰</div>}
+                          {a.image ? <img  src={`${URL_IMAGE}/api/images/${a.image}`} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-lg">📰</div>}
                         </div>
                         <div>
                           <p className="font-medium text-sm text-neutral-800 line-clamp-1">{a.title}</p>

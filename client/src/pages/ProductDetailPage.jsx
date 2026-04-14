@@ -282,7 +282,7 @@ export default function ProductDetailPage() {
                   <Link key={p._id} to={`/store/${p._id}`} className="card-hover group">
                     <div className="aspect-square bg-neutral-100 overflow-hidden">
                       {p.image
-                        ? <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform"/>
+                        ? <img  src={`${URL_IMAGE}/api/images/${p.image}`} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform"/>
                         : <div className="w-full h-full flex items-center justify-center text-3xl">💊</div>
                       }
                     </div>
